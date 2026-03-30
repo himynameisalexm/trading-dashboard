@@ -2503,7 +2503,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Chat welcome
     loadProxyUrl();
-    appendChatMsg('bot', 'G\'day! I\'m your AI trading analyst. Ask me about any stock on your watchlist, trade setups, risk management — or type <strong>/add TICKER</strong> to add a stock. Hit ⚙ to configure your API proxy.');
+    appendChatMsg('bot', 'G\'day! I\'m your trading analyst. Ask me about any stock — try <strong>"TSM"</strong>, <strong>"should I buy?"</strong>, <strong>"earnings"</strong>, or <strong>"risks"</strong>. Type <strong>/add TICKER</strong> to add stocks, <strong>/remove TICKER</strong> to remove them. Type <strong>help</strong> for all commands.');
 });
 
 // ─────────────────────────────────────────────────────────
@@ -2549,52 +2549,227 @@ async function sendChatMessage() {
     const addMatch = msg.match(/^\/add\s+(\w+)/i);
     if (addMatch) {
         const sym = addMatch[1].toUpperCase();
-        appendChatMsg('bot', `Looking up <strong>${sym}</strong>... Use the settings (⚙) to configure your Claude API proxy for full AI analysis. For now I'll add it to your watchlist.`);
         addToWatchlist(sym, guessExchange(sym) + ':' + sym, sym);
         return;
     }
 
-    if (!proxyUrl) {
-        appendChatMsg('bot', 'You need to set your Claude API proxy URL first. Click the ⚙ button above to configure it. See <strong>cloudflare-worker.js</strong> for the free 5-minute setup.');
+    // Check for /remove command
+    const rmMatch = msg.match(/^\/remove\s+(\w+)/i);
+    if (rmMatch) {
+        const sym = rmMatch[1].toUpperCase();
+        removeFromWatchlist(sym);
+        appendChatMsg('bot', `Removed <strong>${sym}</strong> from your watchlist.`);
         return;
     }
 
-    // Show typing indicator
-    const typing = document.createElement('div');
-    typing.className = 'chat-typing';
-    typing.id = 'chat-typing';
-    typing.innerHTML = '<span>●</span><span>●</span><span>●</span> Analysing...';
-    document.getElementById('chat-messages').appendChild(typing);
-    scrollChat();
+    // Try offline response first (works without API)
+    const offlineReply = getOfflineResponse(msg);
 
-    const sendBtn = document.getElementById('chat-send');
-    sendBtn.disabled = true;
+    // If we have a proxy URL, use the full AI for everything
+    if (proxyUrl) {
+        const typing = document.createElement('div');
+        typing.className = 'chat-typing';
+        typing.id = 'chat-typing';
+        typing.innerHTML = '<span>●</span><span>●</span><span>●</span> Analysing...';
+        document.getElementById('chat-messages').appendChild(typing);
+        scrollChat();
 
-    try {
-        const res = await fetch(proxyUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: 'claude-sonnet-4-20250514',
-                max_tokens: 1024,
-                system: SYSTEM_PROMPT,
-                messages: [{ role: 'user', content: msg }]
-            })
-        });
+        const sendBtn = document.getElementById('chat-send');
+        sendBtn.disabled = true;
 
-        const data = await res.json();
-        const reply = data.content?.[0]?.text || data.error?.message || 'No response received.';
+        try {
+            const res = await fetch(proxyUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'claude-sonnet-4-20250514',
+                    max_tokens: 1024,
+                    system: SYSTEM_PROMPT,
+                    messages: [{ role: 'user', content: msg }]
+                })
+            });
 
-        document.getElementById('chat-typing')?.remove();
-        processCommand(reply);
-        appendChatMsg('bot', formatChatResponse(reply));
+            const data = await res.json();
+            const reply = data.content?.[0]?.text || data.error?.message || 'No response received.';
 
-    } catch (err) {
-        document.getElementById('chat-typing')?.remove();
-        appendChatMsg('bot', `<strong style="color:var(--red)">Error:</strong> ${err.message}. Check your proxy URL in settings.`);
+            document.getElementById('chat-typing')?.remove();
+            processCommand(reply);
+            appendChatMsg('bot', formatChatResponse(reply));
+
+        } catch (err) {
+            document.getElementById('chat-typing')?.remove();
+            // Fall back to offline if API fails
+            if (offlineReply) {
+                appendChatMsg('bot', offlineReply + '<br><br><span style="font-size:10px;color:var(--text-3)">⚡ Offline response — API unavailable</span>');
+            } else {
+                appendChatMsg('bot', `<strong style="color:var(--red)">Error:</strong> ${err.message}. Check your proxy URL in settings.`);
+            }
+        }
+
+        sendBtn.disabled = false;
+        return;
     }
 
-    sendBtn.disabled = false;
+    // No proxy — use offline intelligence
+    if (offlineReply) {
+        appendChatMsg('bot', offlineReply);
+    } else {
+        appendChatMsg('bot', 'I don\'t have enough data to answer that one offline. Try asking about a specific ticker on your watchlist — e.g. <strong>"TSM"</strong>, <strong>"should I buy NVDA?"</strong>, or <strong>"what\'s the plan for MSFT?"</strong>');
+    }
+}
+
+// ─────────────────────────────────────────────────────────
+// OFFLINE INTELLIGENCE (uses INSIGHTS + WATCHLIST data)
+// ─────────────────────────────────────────────────────────
+function getOfflineResponse(msg) {
+    const q = msg.toLowerCase().trim();
+
+    // Find which ticker(s) the user is asking about
+    const allSyms = [...Object.keys(INSIGHTS).map(k => ({ tv: k, sym: INSIGHTS[k].sym })),
+                     ...WATCHLIST.map(w => ({ tv: w.tv, sym: w.sym }))];
+    const mentioned = allSyms.filter(s => q.includes(s.sym.toLowerCase()));
+    const ticker = mentioned.length > 0 ? mentioned[0] : null;
+
+    // ── Help / commands ──
+    if (q.match(/\b(help|commands|what can you|how do i)\b/)) {
+        return `Here's what I can do:<br><br>
+        <strong>Stock Analysis</strong> — ask about any ticker: <em>"TSM"</em>, <em>"tell me about NVDA"</em>, <em>"should I buy MSFT?"</em><br>
+        <strong>Trade Plans</strong> — <em>"what's the plan?"</em>, <em>"which stocks should I buy?"</em><br>
+        <strong>Earnings</strong> — <em>"upcoming earnings"</em>, <em>"when does TSM report?"</em><br>
+        <strong>Watchlist</strong> — <em>/add PLTR</em>, <em>/remove ORCL</em><br>
+        <strong>Risks</strong> — <em>"what are the risks?"</em>, <em>"macro outlook"</em><br><br>
+        <span style="font-size:10px;color:var(--text-3)">💡 For full AI analysis, set up a Claude API proxy in ⚙ Settings</span>`;
+    }
+
+    // ── Specific ticker analysis ──
+    if (ticker) {
+        const ins = INSIGHTS[ticker.tv];
+        const wl = WATCHLIST.find(w => w.sym === ticker.sym);
+
+        if (ins) {
+            const levelsHTML = ins.levels.map(l =>
+                `<span style="color:${l.col}">● ${l.label}: <strong>${l.val}</strong></span>`
+            ).join('<br>');
+
+            const signalsHTML = ins.signals.map(s =>
+                `<span style="color:${s.col}">● ${s.label}: <strong>${s.val}</strong></span>`
+            ).join('<br>');
+
+            const bullHTML = ins.bull.slice(0, 3).map(b => `<span style="color:var(--green)">▲</span> ${b}`).join('<br>');
+            const bearHTML = ins.bear.slice(0, 3).map(b => `<span style="color:var(--red)">▼</span> ${b}`).join('<br>');
+
+            return `<strong style="font-size:14px">${ins.sym}</strong> — ${ins.name}<br>
+            <span class="tc-badge ${ins.recClass}" style="display:inline-block;margin:6px 0">${ins.rec}</span><br><br>
+            ${ins.summary}<br><br>
+            <strong>Key Levels:</strong><br>${levelsHTML}<br><br>
+            <strong>Signals:</strong><br>${signalsHTML}<br><br>
+            <strong style="color:var(--green)">Bull Case:</strong><br>${bullHTML}<br><br>
+            <strong style="color:var(--red)">Bear Case:</strong><br>${bearHTML}<br><br>
+            ${ins.holdPeriod ? `<strong>Hold Period:</strong> ${ins.holdPeriod} · <strong>Target:</strong> ${ins.stTarget || '—'} · <strong>Exit:</strong> ${ins.exitRule || '—'}` : ''}
+            ${ins.watch ? `<br><br><strong>Action:</strong> ${ins.watch}` : ''}`;
+        }
+
+        if (wl) {
+            return `<strong>${wl.sym}</strong> — ${wl.name}<br>
+            Status: <span class="tc-badge ${STATUS_BADGE[wl.status]}">${wl.label}</span><br><br>
+            <strong>12M Target:</strong> $${wl.target} · <strong>Entry:</strong> ${wl.entry} · <strong>Stop:</strong> ${wl.stop}<br>
+            <strong>Upside:</strong> +${wl.upside}%<br><br>
+            ${wl.note}<br><br>
+            <em>Click the card or chart button to see the full TradingView chart.</em>`;
+        }
+    }
+
+    // ── "what should I buy" / "buy" / "plan" ──
+    if (q.match(/\b(buy|plan|trade|position|what.*(should|to)\s*(buy|trade)|recommendation|signal)\b/)) {
+        const active = Object.values(INSIGHTS).filter(i => i.recClass === 'badge-active');
+        const wait = Object.values(INSIGHTS).filter(i => i.recClass === 'badge-wait');
+        const avoid = Object.values(INSIGHTS).filter(i => i.recClass === 'badge-no');
+
+        let html = '<strong>Current Trade Signals:</strong><br><br>';
+
+        if (active.length) {
+            html += '<strong style="color:var(--green)">BUY NOW:</strong><br>';
+            active.forEach(a => {
+                html += `● <strong>${a.sym}</strong> — ${a.holdPeriod}, target ${a.stTarget}. ${a.exitRule || ''}<br>`;
+            });
+            html += '<br>';
+        }
+        if (wait.length) {
+            html += '<strong style="color:var(--gold)">WAIT FOR SIGNAL:</strong><br>';
+            wait.forEach(w => {
+                html += `● <strong>${w.sym}</strong> — ${w.buyTrigger || w.watch || ''}<br>`;
+            });
+            html += '<br>';
+        }
+        if (avoid.length) {
+            html += '<strong style="color:var(--red)">DO NOT BUY YET:</strong><br>';
+            avoid.forEach(a => {
+                html += `● <strong>${a.sym}</strong> — ${a.buyTrigger || 'Wait for reversal confirmation'}<br>`;
+            });
+        }
+
+        return html;
+    }
+
+    // ── Earnings ──
+    if (q.match(/\b(earning|report|quarter|when.*report|calendar)\b/)) {
+        const earningsData = [
+            { sym: 'TSM',  date: '2026-04-16' },
+            { sym: 'AMZN', date: '2026-04-23' },
+            { sym: 'MSFT', date: '2026-04-28' },
+            { sym: 'NXPI', date: '2026-04-28' },
+            { sym: 'NVDA', date: '2026-05-20' },
+            { sym: 'CRWD', date: '2026-06-02' },
+            { sym: 'ORCL', date: '2026-06-16' },
+        ];
+        const today = new Date(); today.setHours(0,0,0,0);
+
+        let html = '<strong>Upcoming Earnings:</strong><br><br>';
+        earningsData.forEach(e => {
+            const d = new Date(e.date + 'T00:00:00');
+            const diff = Math.round((d - today) / 86400000);
+            const urgency = diff <= 21 ? 'color:var(--red);font-weight:700' : diff <= 42 ? 'color:var(--gold)' : 'color:var(--text-2)';
+            html += `<span style="${urgency}">● <strong>${e.sym}</strong> — ${e.date} (${diff}d away)</span><br>`;
+        });
+        html += '<br><em>Strategy: Buy 2-3 weeks before, sell the day BEFORE earnings. Requires confirmed uptrend.</em>';
+        return html;
+    }
+
+    // ── Risk / macro ──
+    if (q.match(/\b(risk|macro|danger|war|tariff|fed|iran|oil|economy|recession)\b/)) {
+        return `<strong>Macro Risk Radar:</strong><br><br>
+        <span style="color:var(--red)">🔴 <strong>US–Iran War (HIGH)</strong></span> — Operation Epic Fury, Hormuz partially blocked, oil ~$111. Any escalation = bad for tech longs.<br><br>
+        <span style="color:var(--red)">🔴 <strong>Fed Rate Hike Risk (HIGH)</strong></span> — Probability >50% threshold. Stagflation concern. Hike = severe tech selloff.<br><br>
+        <span style="color:var(--gold)">🟡 <strong>Trump Tariffs (MEDIUM)</strong></span> — 25% on semis + autos. Software/cloud EXEMPT. Chip stocks (NVDA, AMD, TSM) vulnerable.<br><br>
+        <span style="color:var(--gold)">🟡 <strong>ISM Manufacturing</strong></span> — 1st Wed of month. >50 = hold longs, <49 = tighten stops.<br><br>
+        <span style="color:var(--gold)">🟡 <strong>ARK/Cathie Wood</strong></span> — Rotating OUT of NVDA + chips. Institutional selling signal.<br><br>
+        <strong>Bottom line:</strong> High risk environment. Only enter confirmed uptrends. Keep position sizes small. TSM pre-earnings is the clearest setup right now.`;
+    }
+
+    // ── Watchlist / portfolio ──
+    if (q.match(/\b(watchlist|portfolio|holding|position|my stock|what.*own)\b/)) {
+        let html = '<strong>Your Watchlist:</strong><br><br>';
+        WATCHLIST.forEach(w => {
+            const col = STATUS_COLORS[w.status];
+            html += `<span style="color:${col}">●</span> <strong>${w.sym}</strong> — ${w.name} · <span class="tc-badge ${STATUS_BADGE[w.status]}" style="font-size:9px">${w.label}</span><br>`;
+        });
+        html += '<br><em>You haven\'t bought any yet. Click a ticker to see the full analysis.</em>';
+        return html;
+    }
+
+    // ── Greeting ──
+    if (q.match(/^(hi|hey|hello|g'?day|sup|yo|morning|afternoon|evening)\b/)) {
+        return `G'day! What stock are you looking at? I've got analysis ready for <strong>TSM, NVDA, MSFT, AMZN, ORCL, META, PLTR, AVGO, AMD,</strong> and <strong>ARM</strong>. Just type a ticker name!`;
+    }
+
+    // ── Catch-all: try to match any known ticker in the question ──
+    for (const [tvSym, ins] of Object.entries(INSIGHTS)) {
+        if (q.includes(ins.sym.toLowerCase())) {
+            return getOfflineResponse(ins.sym);
+        }
+    }
+
+    return null; // no offline match — will prompt user
 }
 
 function appendChatMsg(role, html) {
