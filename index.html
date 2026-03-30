@@ -1,0 +1,3066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Dashboard — Brisbane</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-0: #080c14;
+            --bg-1: #0d1117;
+            --bg-2: #161b22;
+            --bg-3: #21262d;
+            --border: #30363d;
+            --border-light: #21262d;
+            --text-1: #e6edf3;
+            --text-2: #8b949e;
+            --text-3: #484f58;
+            --green: #3fb950;
+            --green-dim: rgba(63,185,80,0.15);
+            --red: #f85149;
+            --red-dim: rgba(248,81,73,0.15);
+            --blue: #58a6ff;
+            --blue-dim: rgba(88,166,255,0.15);
+            --gold: #d29922;
+            --gold-dim: rgba(210,153,34,0.15);
+            --purple: #a371f7;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        html, body { height: 100%; overflow: hidden; }
+
+        body {
+            background: var(--bg-0);
+            color: var(--text-1);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ─── TICKER TAPE ─── */
+        #ticker-tape-wrap {
+            height: 46px;
+            flex-shrink: 0;
+            background: var(--bg-1);
+        }
+        .tradingview-widget-container { height: 100%; width: 100%; }
+        .tradingview-widget-container__widget { height: 100%; width: 100%; }
+
+        /* ─── HEADER ─── */
+        header {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            height: 56px;
+            background: var(--bg-2);
+            border-bottom: 1px solid var(--border);
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-mark {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, #58a6ff 0%, #a371f7 100%);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+        .logo-text { line-height: 1.2; }
+        .logo-text .title { font-size: 14px; font-weight: 700; }
+        .logo-text .sub { font-size: 10px; color: var(--text-3); }
+
+        .header-pills { display: flex; gap: 8px; align-items: center; }
+        .pill {
+            display: flex; flex-direction: column; align-items: center;
+            background: var(--bg-3); border: 1px solid var(--border);
+            border-radius: 6px; padding: 4px 12px; cursor: default;
+            min-width: 80px;
+        }
+        .pill-label { font-size: 9px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; }
+        .pill-value { font-family: var(--font-mono); font-size: 13px; font-weight: 500; line-height: 1.4; }
+
+        .market-dot {
+            display: inline-block; width: 7px; height: 7px;
+            border-radius: 50%; margin-right: 4px; vertical-align: middle;
+        }
+        .dot-open  { background: var(--green); box-shadow: 0 0 5px var(--green); animation: blink 2s infinite; }
+        .dot-pre   { background: var(--gold);  box-shadow: 0 0 5px var(--gold);  animation: blink 2s infinite; }
+        .dot-closed{ background: var(--red); }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+        /* ─── ALERT TICKER ─── */
+        #alert-bar {
+            flex-shrink: 0;
+            height: 32px;
+            background: linear-gradient(90deg, rgba(248,81,73,0.12), rgba(13,17,23,0.8));
+            border-bottom: 1px solid rgba(248,81,73,0.25);
+            display: flex; align-items: center; gap: 10px;
+            padding: 0 14px;
+            overflow: hidden;
+        }
+        .alert-tag {
+            background: var(--red); color: #fff;
+            font-size: 9px; font-weight: 700; letter-spacing: 0.8px;
+            padding: 2px 6px; border-radius: 3px; white-space: nowrap; flex-shrink: 0;
+        }
+        .alert-scroll-wrap { overflow: hidden; flex: 1; }
+        .alert-scroll {
+            display: inline-block; white-space: nowrap;
+            font-size: 11px; color: rgba(248,81,73,0.85);
+            animation: scroll-ticker 40s linear infinite;
+        }
+        @keyframes scroll-ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+        /* ─── MAIN LAYOUT ─── */
+        #main {
+            display: grid;
+            grid-template-columns: 268px 1fr 296px;
+            overflow: hidden;
+            height: 100%;
+            transition: grid-template-columns 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+        #main.left-collapsed  { grid-template-columns: 0px 1fr 296px; }
+        #main.right-collapsed { grid-template-columns: 268px 1fr 0px; }
+        #main.left-collapsed.right-collapsed { grid-template-columns: 0px 1fr 0px; }
+
+        /* ─── SCROLLABLE PANELS ─── */
+        .panel {
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-height: 0;
+        }
+        .panel::-webkit-scrollbar { width: 3px; }
+        .panel::-webkit-scrollbar-track { background: transparent; }
+        .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        /* ─── LEFT SIDEBAR ─── */
+        #left {
+            background: var(--bg-2);
+            border-right: 1px solid var(--border);
+            padding: 14px 12px;
+            display: flex; flex-direction: column; gap: 14px;
+            transition: padding 0.3s, opacity 0.25s, border-width 0.3s;
+            overflow: hidden;
+        }
+        #main.left-collapsed #left {
+            padding: 0; opacity: 0; pointer-events: none; border-right-width: 0;
+        }
+
+        /* ─── RIGHT SIDEBAR ─── */
+        #right {
+            background: var(--bg-2);
+            border-left: 1px solid var(--border);
+            display: flex; flex-direction: column; min-height: 0;
+            transition: opacity 0.25s, border-width 0.3s;
+            overflow: hidden;
+        }
+        #main.right-collapsed #right {
+            opacity: 0; pointer-events: none; border-left-width: 0;
+        }
+
+        /* ─── COLLAPSE TOGGLE BUTTONS ─── */
+        #main-wrap {
+            flex: 1; position: relative; overflow: hidden; min-height: 0;
+        }
+        .sidebar-toggle {
+            position: absolute; top: 50%; z-index: 50;
+            width: 20px; height: 44px;
+            background: var(--bg-3); border: 1px solid var(--border);
+            color: var(--text-3); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+        }
+        .sidebar-toggle:hover { background: var(--blue-dim); color: var(--blue); border-color: var(--blue); }
+        #toggle-left {
+            left: 268px; transform: translateY(-50%);
+            border-radius: 0 6px 6px 0; border-left: none;
+        }
+        #main.left-collapsed ~ #toggle-left { left: 0px; }
+        #toggle-right {
+            right: 296px; transform: translateY(-50%);
+            border-radius: 6px 0 0 6px; border-right: none;
+        }
+        #main.right-collapsed ~ #toggle-right { right: 0px; }
+
+        /* ─── TICKER SEARCH ─── */
+        .ticker-search-wrap {
+            position: relative; margin-left: auto; display: flex; align-items: center; gap: 8px;
+        }
+        #ticker-search {
+            width: 180px; background: var(--bg-3); border: 1px solid var(--border);
+            border-radius: 6px; color: var(--text-1); padding: 5px 10px 5px 28px;
+            font-size: 11px; outline: none; font-family: var(--font-sans);
+            transition: width 0.2s, border-color 0.2s;
+        }
+        #ticker-search:focus { border-color: var(--blue); width: 220px; }
+        #ticker-search::placeholder { color: var(--text-3); }
+        .ticker-search-icon {
+            position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+            font-size: 12px; color: var(--text-3); pointer-events: none;
+        }
+        #ticker-results {
+            position: absolute; top: 100%; right: 0; margin-top: 4px;
+            width: 280px; max-height: 300px; overflow-y: auto;
+            background: var(--bg-2); border: 1px solid var(--border);
+            border-radius: 8px; z-index: 100; display: none;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        }
+        #ticker-results.open { display: block; }
+        .ticker-result-item {
+            padding: 8px 12px; cursor: pointer; font-size: 12px;
+            display: flex; align-items: center; gap: 10px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .ticker-result-item:last-child { border-bottom: none; }
+        .ticker-result-item:hover { background: var(--blue-dim); }
+        .ticker-result-item .tr-sym {
+            font-weight: 700; color: var(--blue); min-width: 50px;
+            font-family: var(--font-mono); font-size: 12px;
+        }
+        .ticker-result-item .tr-name { color: var(--text-2); font-size: 11px; flex: 1; }
+        .ticker-result-item .tr-exchange { color: var(--text-3); font-size: 9px; }
+        .ticker-result-item .tr-on-wl {
+            font-size: 8px; background: var(--green-dim); color: var(--green);
+            padding: 1px 5px; border-radius: 3px;
+        }
+        .ticker-result-item .tr-add-wl {
+            font-size: 9px; background: var(--blue-dim); color: var(--blue);
+            padding: 2px 7px; border-radius: 4px; cursor: pointer; font-weight: 600;
+            transition: background 0.15s;
+        }
+        .ticker-result-item .tr-add-wl:hover {
+            background: var(--blue); color: #fff;
+        }
+        .ticker-result-empty {
+            padding: 14px; text-align: center; font-size: 11px; color: var(--text-3);
+        }
+        .ticker-result-item.tr-active { background: var(--blue-dim); }
+        .right-news-header {
+            flex-shrink: 0;
+            padding: 10px 14px 8px;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .right-filter-bar {
+            flex-shrink: 0;
+            padding: 7px 14px;
+            border-bottom: 1px solid var(--border);
+            display: flex; gap: 5px;
+        }
+        #news-feed {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 14px;
+            min-height: 0;
+        }
+        #news-feed::-webkit-scrollbar { width: 3px; }
+        #news-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .right-etf-section {
+            flex-shrink: 0;
+            border-top: 1px solid var(--border);
+            padding: 12px 14px;
+        }
+
+        /* ─── CENTER ─── */
+        #center {
+            display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+        }
+        #watchlist-area {
+            flex-shrink: 0;
+            padding: 12px 14px 0;
+        }
+        #chart-area {
+            flex: 1;
+            padding: 10px 14px 0;
+            display: flex; flex-direction: column;
+            min-height: 0;
+        }
+        .chart-box {
+            flex: 1;
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            min-height: 0;
+            display: flex; flex-direction: column;
+        }
+        .chart-toolbar {
+            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .chart-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+        #tradingview-main {
+            height: calc(100vh - 490px);
+            min-height: 320px;
+            width: 100%;
+        }
+
+        /* ─── SHARED COMPONENTS ─── */
+        .sec-label {
+            font-size: 10px; font-weight: 600; color: var(--text-2);
+            text-transform: uppercase; letter-spacing: 0.9px; margin-bottom: 8px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .card {
+            background: var(--bg-3);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 10px;
+        }
+
+        /* ─── TRADE PLAN CARDS ─── */
+        .trade-card {
+            background: var(--bg-3);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 10px 10px 10px 13px;
+            margin-bottom: 7px;
+            position: relative;
+            overflow: hidden;
+        }
+        .trade-card::before {
+            content: ''; position: absolute;
+            left: 0; top: 0; bottom: 0; width: 3px;
+        }
+        .tc-active::before { background: var(--green); }
+        .tc-wait::before   { background: var(--gold); }
+        .tc-no::before     { background: var(--red); }
+
+        .tc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+        .tc-sym  { font-size: 15px; font-weight: 700; }
+        .tc-badge {
+            font-size: 9px; font-weight: 700; padding: 2px 6px;
+            border-radius: 3px; letter-spacing: 0.4px;
+        }
+        .badge-active { background: var(--green-dim); color: var(--green); }
+        .badge-wait   { background: var(--gold-dim);  color: var(--gold); }
+        .badge-no     { background: var(--red-dim);   color: var(--red); }
+        .badge-watch  { background: var(--blue-dim);  color: var(--blue); }
+
+        .tc-sub { font-size: 10px; color: var(--text-3); margin-bottom: 7px; }
+        .tc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 6px; }
+        .tc-price-label { font-size: 8px; color: var(--text-3); text-transform: uppercase; }
+        .tc-price-val   { font-family: var(--font-mono); font-size: 11px; font-weight: 500; }
+
+        .conf-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+        .conf-bar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+        .conf-fill { height: 100%; border-radius: 2px; }
+        .conf-score { font-size: 10px; font-weight: 600; width: 28px; text-align: right; font-family: var(--font-mono); }
+        .tc-note { font-size: 9px; color: var(--text-3); line-height: 1.5; }
+
+        /* ─── WATCHLIST CARDS ─── */
+        .watchlist-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .wl-card {
+            background: var(--bg-2);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 9px;
+            cursor: pointer;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .wl-card:hover { border-color: var(--blue); }
+        .wl-card.wl-selected {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 1px var(--blue), inset 0 0 40px rgba(88,166,255,0.03);
+        }
+        .wl-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+        .wl-sym  { font-size: 14px; font-weight: 700; }
+        .wl-name { font-size: 9px; color: var(--text-3); }
+        .wl-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 8px; }
+        .wl-row  { }
+        .wl-rl   { font-size: 8px; color: var(--text-3); text-transform: uppercase; }
+        .wl-rv   { font-family: var(--font-mono); font-size: 11px; }
+        .wl-conf-row { margin-top: 7px; }
+        .wl-note { font-size: 9px; color: var(--text-3); margin-top: 5px; line-height: 1.4; }
+
+        /* ─── EARNINGS ─── */
+        .earn-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 7px 0; border-bottom: 1px solid var(--border-light);
+        }
+        .earn-row:last-child { border-bottom: none; }
+        .earn-date { font-family: var(--font-mono); font-size: 10px; color: var(--text-2); width: 52px; }
+        .earn-sym  { font-weight: 600; font-size: 13px; }
+        .earn-days {
+            font-size: 9px; font-weight: 600; padding: 2px 6px;
+            border-radius: 3px; font-family: var(--font-mono);
+        }
+        .ed-hot  { background: var(--red-dim);  color: var(--red); }
+        .ed-soon { background: var(--gold-dim); color: var(--gold); }
+        .ed-far  { background: var(--green-dim);color: var(--green); }
+
+        /* ─── RISK RADAR ─── */
+        .risk-row {
+            display: flex; align-items: flex-start; gap: 8px;
+            padding: 7px 0; border-bottom: 1px solid var(--border-light);
+        }
+        .risk-row:last-child { border-bottom: none; }
+        .risk-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            margin-top: 4px; flex-shrink: 0;
+        }
+        .rdot-hi  { background: var(--red);  box-shadow: 0 0 5px var(--red); }
+        .rdot-med { background: var(--gold); box-shadow: 0 0 5px var(--gold); }
+        .rdot-lo  { background: var(--green);box-shadow: 0 0 5px var(--green); }
+        .risk-body { font-size: 11px; color: var(--text-2); line-height: 1.5; }
+        .risk-body strong { color: var(--text-1); display: block; font-size: 11px; margin-bottom: 1px; }
+
+        /* ─── STRATEGY STATS ─── */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+        .stat-box { text-align: center; background: var(--bg-2); border-radius: 5px; padding: 7px 4px; }
+        .stat-big { font-size: 20px; font-weight: 700; line-height: 1.2; }
+        .stat-small { font-size: 9px; color: var(--text-3); margin-top: 2px; }
+
+        /* ─── NEWS ─── */
+        .news-item {
+            padding: 9px 0;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer;
+        }
+        .news-item:last-child { border-bottom: none; }
+        .news-item:hover .news-headline { color: var(--blue); }
+        .news-headline { font-size: 12px; line-height: 1.5; color: var(--text-1); margin-bottom: 4px; }
+        .news-meta { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
+        .news-src  { font-size: 9px; color: var(--blue); font-weight: 500; }
+        .news-time { font-size: 9px; color: var(--text-3); }
+        .news-sent {
+            font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 500;
+        }
+        .sent-bull { background: var(--green-dim); color: var(--green); }
+        .sent-bear { background: var(--red-dim);   color: var(--red); }
+        .sent-neu  { background: rgba(139,148,158,0.15); color: var(--text-2); }
+        .news-loading { text-align: center; padding: 24px; color: var(--text-3); font-size: 12px; }
+
+        /* ─── BUTTONS ─── */
+        .btn {
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-2);
+            font-size: 11px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.15s;
+        }
+        .btn:hover, .btn.active {
+            background: var(--blue);
+            border-color: var(--blue);
+            color: #fff;
+        }
+        .btn-xs {
+            padding: 2px 7px;
+            font-size: 9px;
+            border-radius: 3px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-2);
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-xs:hover { background: var(--bg-3); color: var(--text-1); }
+
+        /* ─── ETF GRID ─── */
+        .etf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .etf-card {
+            background: var(--bg-3); border: 1px solid var(--border);
+            border-radius: 5px; padding: 7px 8px; cursor: pointer;
+            transition: border-color 0.15s;
+        }
+        .etf-card:hover { border-color: var(--blue); }
+        .etf-sym  { font-size: 12px; font-weight: 600; }
+        .etf-name { font-size: 9px; color: var(--text-3); }
+
+        /* ─── NEW PICKS SECTION ─── */
+        .new-pick-card {
+            background: var(--bg-3);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 9px 10px 9px 12px;
+            margin-bottom: 7px;
+            cursor: pointer;
+            transition: border-color 0.15s;
+            position: relative;
+            overflow: hidden;
+        }
+        .new-pick-card::before {
+            content: ''; position: absolute;
+            left: 0; top: 0; bottom: 0; width: 3px;
+            background: var(--purple);
+        }
+        .new-pick-card:hover { border-color: var(--purple); }
+        .new-pick-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+        .new-pick-sym { font-size: 14px; font-weight: 700; }
+        .new-pick-signal {
+            font-size: 9px; font-weight: 700; padding: 2px 6px;
+            border-radius: 3px; letter-spacing: 0.4px;
+        }
+        .new-pick-thesis { font-size: 10px; color: var(--text-2); line-height: 1.5; margin-bottom: 5px; }
+        .new-pick-footer { display: flex; align-items: center; gap: 6px; }
+
+        /* ─── ANALYSIS PANEL ─── */
+        #analysis-panel {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 14px;
+            min-height: 0;
+            display: none;
+        }
+        #analysis-panel.visible { display: block; }
+        #analysis-panel::-webkit-scrollbar { width: 3px; }
+        #analysis-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .ai-header {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 12px;
+        }
+        .ai-sym-badge {
+            font-size: 18px; font-weight: 700;
+        }
+        .ai-rec-badge {
+            font-size: 11px; font-weight: 700;
+            padding: 3px 10px; border-radius: 4px; letter-spacing: 0.3px;
+        }
+        .ai-updated { font-size: 9px; color: var(--text-3); margin-left: auto; }
+
+        .ai-section { margin-bottom: 12px; }
+        .ai-section-title {
+            font-size: 9px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.8px; color: var(--text-3); margin-bottom: 6px;
+            padding-bottom: 4px; border-bottom: 1px solid var(--border-light);
+        }
+        .ai-body { font-size: 11px; line-height: 1.7; color: var(--text-2); }
+        .ai-body strong { color: var(--text-1); }
+
+        .ai-levels {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 6px; margin-bottom: 4px;
+        }
+        .ai-level-box {
+            background: var(--bg-3); border: 1px solid var(--border);
+            border-radius: 5px; padding: 7px 8px;
+        }
+        .ai-level-label { font-size: 8px; color: var(--text-3); text-transform: uppercase; }
+        .ai-level-val { font-family: var(--font-mono); font-size: 12px; font-weight: 500; }
+
+        .ai-signal-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 5px 0; border-bottom: 1px solid var(--border-light);
+            font-size: 11px;
+        }
+        .ai-signal-row:last-child { border-bottom: none; }
+        .signal-label { color: var(--text-2); }
+        .signal-val { font-weight: 600; font-family: var(--font-mono); font-size: 11px; }
+
+        .bullet-list { padding-left: 0; list-style: none; }
+        .bullet-list li {
+            font-size: 11px; color: var(--text-2); line-height: 1.6;
+            padding: 3px 0;
+            padding-left: 14px; position: relative;
+        }
+        .bullet-list li::before {
+            content: '▸'; position: absolute; left: 0;
+            color: var(--text-3); font-size: 9px; top: 5px;
+        }
+        .bullet-list li strong { color: var(--text-1); }
+
+        .right-tab-bar {
+            flex-shrink: 0;
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+        .right-tab {
+            flex: 1; padding: 9px 4px; text-align: center;
+            font-size: 11px; font-weight: 500; color: var(--text-2);
+            cursor: pointer; border-bottom: 2px solid transparent;
+            transition: all 0.15s; background: none; border-top: none;
+            border-left: none; border-right: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .right-tab:hover { color: var(--text-1); }
+        .right-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+        /* ─── FOOTER ─── */
+        footer {
+            flex-shrink: 0;
+            height: 28px;
+            background: var(--bg-2);
+            border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 14px;
+            font-size: 10px; color: var(--text-3);
+        }
+
+        /* ─── UTILITIES ─── */
+        .c-green  { color: var(--green); }
+        .c-red    { color: var(--red); }
+        .c-blue   { color: var(--blue); }
+        .c-gold   { color: var(--gold); }
+        .c-dim    { color: var(--text-3); }
+        .mono     { font-family: var(--font-mono); }
+        .divider  { height: 1px; background: var(--border); margin: 8px 0; }
+        .tag-row  { display: flex; gap: 4px; margin-bottom: 6px; }
+        .tag {
+            font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 500;
+        }
+        .tag-blue   { background: var(--blue-dim); color: var(--blue); }
+        .tag-green  { background: var(--green-dim); color: var(--green); }
+        .tag-gold   { background: var(--gold-dim); color: var(--gold); }
+        .tag-red    { background: var(--red-dim); color: var(--red); }
+        .tag-purple { background: rgba(163,113,247,0.15); color: var(--purple); }
+
+        /* ── Chat Panel ──────────────────────────────────── */
+        #chat-btn {
+            position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+            background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+            border: none; border-radius: 50px; color: #fff;
+            padding: 11px 20px; cursor: pointer; font-size: 13px; font-weight: 600;
+            box-shadow: 0 4px 20px rgba(88,166,255,0.35);
+            transition: transform 0.15s, box-shadow 0.15s;
+            display: flex; align-items: center; gap: 7px;
+        }
+        #chat-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(88,166,255,0.5); }
+        #chat-btn .chat-notif {
+            width: 8px; height: 8px; background: var(--green);
+            border-radius: 50%; animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        #chat-panel {
+            position: fixed; bottom: 82px; right: 24px;
+            width: 420px; height: 540px;
+            background: var(--bg-2); border: 1px solid var(--border);
+            border-radius: 14px; z-index: 1000;
+            display: flex; flex-direction: column;
+            transform: translateY(16px) scale(0.97); opacity: 0; pointer-events: none;
+            transition: all 0.22s cubic-bezier(0.34,1.26,0.64,1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        #chat-panel.open {
+            transform: translateY(0) scale(1); opacity: 1; pointer-events: all;
+        }
+        #chat-header {
+            padding: 12px 16px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+        }
+        #chat-header .ch-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg,var(--blue),var(--purple));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; flex-shrink: 0;
+        }
+        #chat-header .ch-title { font-weight: 600; font-size: 13px; }
+        #chat-header .ch-sub { font-size: 10px; color: var(--text-3); margin-top: 1px; }
+        #chat-header .ch-actions { margin-left: auto; display: flex; gap: 6px; }
+        #chat-header .ch-actions button {
+            background: var(--bg-3); border: 1px solid var(--border);
+            border-radius: 6px; color: var(--text-2); padding: 4px 9px;
+            font-size: 10px; cursor: pointer;
+        }
+        #chat-header .ch-actions button:hover { color: var(--text-1); }
+
+        #chat-messages {
+            flex: 1; overflow-y: auto; padding: 12px 14px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        #chat-messages::-webkit-scrollbar { width: 4px; }
+        #chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .chat-msg { max-width: 92%; border-radius: 10px; padding: 9px 12px; font-size: 12px; line-height: 1.55; }
+        .chat-msg-user {
+            align-self: flex-end;
+            background: var(--blue-dim); border: 1px solid rgba(88,166,255,0.25);
+            color: var(--text-1);
+        }
+        .chat-msg-bot {
+            align-self: flex-start;
+            background: var(--bg-3); border: 1px solid var(--border);
+            color: var(--text-1);
+        }
+        .chat-msg-bot strong { color: var(--blue); }
+        .chat-msg-bot .bot-tag {
+            font-size: 9px; color: var(--text-3); margin-bottom: 5px; display: block;
+        }
+        .chat-typing {
+            align-self: flex-start; background: var(--bg-3); border: 1px solid var(--border);
+            border-radius: 10px; padding: 10px 14px; font-size: 12px; color: var(--text-3);
+        }
+        .chat-typing span { animation: blink 1.2s infinite; }
+        .chat-typing span:nth-child(2) { animation-delay: 0.2s; }
+        .chat-typing span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+        #chat-input-row {
+            padding: 10px 12px; border-top: 1px solid var(--border);
+            display: flex; gap: 8px; flex-shrink: 0;
+        }
+        #chat-input {
+            flex: 1; background: var(--bg-3); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-1); padding: 8px 11px;
+            font-size: 12px; outline: none; resize: none; height: 36px;
+            font-family: var(--font-sans);
+        }
+        #chat-input:focus { border-color: var(--blue); }
+        #chat-send {
+            background: var(--blue); border: none; border-radius: 8px;
+            color: #fff; padding: 0 14px; cursor: pointer; font-size: 16px;
+            flex-shrink: 0;
+        }
+        #chat-send:hover { background: #79b8ff; }
+        #chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ── Modal overlay ──────────────────────────────── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.72);
+            z-index: 1900; display: none; align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: var(--bg-2); border: 1px solid var(--border);
+            border-radius: 14px; width: 440px; max-width: calc(100vw - 40px);
+            padding: 24px; z-index: 2000;
+        }
+        .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 18px; }
+        .modal-field { margin-bottom: 14px; }
+        .modal-field label { display: block; font-size: 11px; color: var(--text-3); margin-bottom: 5px; }
+        .modal-field input {
+            width: 100%; box-sizing: border-box;
+            background: var(--bg-3); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-1); padding: 9px 12px;
+            font-size: 12px; outline: none;
+        }
+        .modal-field input:focus { border-color: var(--blue); }
+        .modal-hint { font-size: 10px; color: var(--text-3); margin-top: 4px; line-height: 1.5; }
+        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+        .modal-actions .btn-cancel {
+            background: var(--bg-3); border: 1px solid var(--border);
+            border-radius: 7px; color: var(--text-2); padding: 8px 16px;
+            font-size: 12px; cursor: pointer;
+        }
+        .modal-actions .btn-save {
+            background: var(--blue); border: none;
+            border-radius: 7px; color: #fff; padding: 8px 16px;
+            font-size: 12px; cursor: pointer; font-weight: 600;
+        }
+
+        /* ── Suggestion dropdown ─────────────────────────── */
+        #stock-suggestions {
+            max-height: 200px; overflow-y: auto;
+            background: var(--bg-3); border: 1px solid var(--border);
+            border-radius: 8px; margin-top: 4px;
+        }
+        .stock-sug-item {
+            padding: 9px 12px; cursor: pointer; font-size: 12px;
+            display: flex; gap: 10px; align-items: center;
+        }
+        .stock-sug-item:hover { background: var(--blue-dim); }
+        .stock-sug-item .sug-sym { font-weight: 700; color: var(--blue); min-width: 55px; }
+        .stock-sug-item .sug-name { color: var(--text-2); }
+
+        /* ── Remove stock button on wl-card ─────────────── */
+        .wl-card-remove {
+            position: absolute; top: 6px; right: 6px;
+            background: var(--red-dim); border: none; border-radius: 4px;
+            color: var(--red); font-size: 10px; cursor: pointer;
+            padding: 2px 5px; opacity: 0; transition: opacity 0.15s;
+            pointer-events: none;
+        }
+        .wl-card:hover .wl-card-remove { opacity: 1; pointer-events: all; }
+        .wl-card { position: relative; }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     TICKER TAPE
+══════════════════════════════════════════════════ -->
+<div id="ticker-tape-wrap">
+    <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+        {
+            "symbols": [
+                {"proName":"NASDAQ:NVDA","title":"NVDA"},
+                {"proName":"NASDAQ:MSFT","title":"MSFT"},
+                {"proName":"NASDAQ:AMZN","title":"AMZN"},
+                {"proName":"NYSE:TSM","title":"TSM"},
+                {"proName":"NYSE:ORCL","title":"ORCL"},
+                {"proName":"NASDAQ:CRWD","title":"CRWD"},
+                {"proName":"NASDAQ:NXPI","title":"NXPI"},
+                {"proName":"NASDAQ:ISRG","title":"ISRG"},
+                {"proName":"NYSE:DE","title":"DE"},
+                {"proName":"NASDAQ:TSLA","title":"TSLA"},
+                {"proName":"AMEX:IVV","title":"IVV"},
+                {"proName":"AMEX:SPY","title":"SPY"},
+                {"proName":"NASDAQ:QQQ","title":"QQQ"},
+                {"proName":"AMEX:BOTZ","title":"BOTZ"},
+                {"proName":"FOREXCOM:AUDUSD","title":"AUD/USD"},
+                {"proName":"TVC:GOLD","title":"GOLD"},
+                {"proName":"TVC:USOIL","title":"OIL (WTI)"},
+                {"proName":"TVC:UKOIL","title":"BRENT"}
+            ],
+            "showSymbolLogo": true,
+            "isTransparent": false,
+            "displayMode": "adaptive",
+            "colorTheme": "dark",
+            "locale": "en"
+        }
+        </script>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════════════ -->
+<header>
+    <div class="logo">
+        <div class="logo-mark">📈</div>
+        <div class="logo-text">
+            <div class="title">Personal Trading Dashboard</div>
+            <div class="sub">Brisbane, Australia · Research &amp; Analysis Only — Not Financial Advice</div>
+        </div>
+    </div>
+    <div class="header-pills">
+        <div class="pill">
+            <span class="pill-label">AUD/USD</span>
+            <span class="pill-value" id="hdr-audusd">—</span>
+        </div>
+        <div class="pill">
+            <span class="pill-label">S&amp;P 500</span>
+            <span class="pill-value c-red">~6,378</span>
+        </div>
+        <div class="pill">
+            <span class="pill-label">Brent Crude</span>
+            <span class="pill-value c-red">~$111</span>
+        </div>
+        <div class="pill">
+            <span class="pill-label">Gold (Hold)</span>
+            <span class="pill-value c-gold">~$3,100</span>
+        </div>
+        <div class="pill">
+            <span class="pill-label">US Market</span>
+            <span class="pill-value" id="hdr-market"><span class="market-dot dot-closed" id="mkt-dot"></span><span id="mkt-txt">—</span></span>
+        </div>
+        <div class="pill" style="min-width:110px">
+            <span class="pill-label">Brisbane</span>
+            <span class="pill-value mono" id="hdr-clock">—</span>
+        </div>
+    </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════
+     ALERT TICKER
+══════════════════════════════════════════════════ -->
+<div id="alert-bar">
+    <span class="alert-tag">LIVE NEWS</span>
+    <div class="alert-scroll-wrap">
+        <span class="alert-scroll" id="alert-scroll-text">Fetching latest headlines…</span>
+    </div>
+    <span style="font-size:9px;color:rgba(248,81,73,0.45);white-space:nowrap;flex-shrink:0;padding-left:10px" id="alert-timestamp"></span>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MAIN 3-COLUMN LAYOUT
+══════════════════════════════════════════════════ -->
+<div id="main-wrap">
+<div id="main">
+
+    <!-- ────────────────── LEFT SIDEBAR ────────────────── -->
+    <div id="left" class="panel">
+
+        <!-- Trade Plans -->
+        <div>
+            <div class="sec-label">
+                <span>Current Trade Plans</span>
+                <span class="tag tag-blue">Stake · Long Only</span>
+            </div>
+
+            <!-- TSM ─ ACTIVE -->
+            <div class="trade-card tc-active">
+                <div class="tc-head">
+                    <span class="tc-sym">TSM</span>
+                    <span class="tc-badge badge-active">ACTIVE</span>
+                </div>
+                <div class="tc-sub">Pre-earnings window · Earnings Apr 16 · Sell DAY BEFORE</div>
+                <div class="tc-grid">
+                    <div>
+                        <div class="tc-price-label">Entry</div>
+                        <div class="tc-price-val c-blue">$325–328</div>
+                    </div>
+                    <div>
+                        <div class="tc-price-label">Target</div>
+                        <div class="tc-price-val c-green">$345–350</div>
+                    </div>
+                    <div>
+                        <div class="tc-price-label">Stop Loss</div>
+                        <div class="tc-price-val c-red">$310</div>
+                    </div>
+                </div>
+                <div class="conf-row">
+                    <span style="font-size:9px;color:var(--text-3)">Confidence</span>
+                    <div class="conf-bar"><div class="conf-fill" style="width:60%;background:var(--green)"></div></div>
+                    <span class="conf-score c-green">6/10</span>
+                </div>
+                <div class="tc-note">✓ Insider buying Mar 24 · 4/4 historical pre-earnings wins · Capacity fully stretched (Broadcom) · Relative strength vs market</div>
+            </div>
+
+            <!-- MSFT ─ WAIT -->
+            <div class="trade-card tc-wait">
+                <div class="tc-head">
+                    <span class="tc-sym">MSFT</span>
+                    <span class="tc-badge badge-wait">WAIT</span>
+                </div>
+                <div class="tc-sub">Need 2 consecutive green days + volume · Earnings Apr 28</div>
+                <div class="tc-grid">
+                    <div>
+                        <div class="tc-price-label">Entry (on signal)</div>
+                        <div class="tc-price-val c-blue">$356–360</div>
+                    </div>
+                    <div>
+                        <div class="tc-price-label">Target</div>
+                        <div class="tc-price-val c-green">$380–385</div>
+                    </div>
+                    <div>
+                        <div class="tc-price-label">Stop Loss</div>
+                        <div class="tc-price-val c-red">$342</div>
+                    </div>
+                </div>
+                <div class="conf-row">
+                    <span style="font-size:9px;color:var(--text-3)">Confidence</span>
+                    <div class="conf-bar"><div class="conf-fill" style="width:45%;background:var(--gold)"></div></div>
+                    <span class="conf-score c-gold">4.5/10</span>
+                </div>
+                <div class="tc-note">Most oversold in a decade · 67% analyst upside · Tariff-immune (software/cloud) · Wait for confirmed bottom</div>
+            </div>
+
+            <!-- NVDA ─ NOT YET -->
+            <div class="trade-card tc-no">
+                <div class="tc-head">
+                    <span class="tc-sym">NVDA</span>
+                    <span class="tc-badge badge-no">NOT YET</span>
+                </div>
+                <div class="tc-sub">Wait for reversal confirmed above $175 for 2 sessions · Earnings May 20</div>
+                <div class="tc-grid">
+                    <div>
+                        <div class="tc-price-label">Entry (on confirm)</div>
+                        <div class="tc-price-val c-blue">$167–170</div>
+                    </div>
+                    <div>
+                        <div class="tc-price-label">Target</div>
+                        <div class="tc-price-val c-green">$182–185</div>
+                    </div>
+                    <div>
+                        <div class="tc-price-label">Stop Loss</div>
+                        <div class="tc-price-val c-red">$155</div>
+                    </div>
+                </div>
+                <div class="conf-row">
+                    <span style="font-size:9px;color:var(--text-3)">Confidence</span>
+                    <div class="conf-bar"><div class="conf-fill" style="width:35%;background:var(--red)"></div></div>
+                    <span class="conf-score c-red">3.5/10</span>
+                </div>
+                <div class="tc-note">⚠ 21 bearish vs 5 bullish technical signals (Mar 27) · ARK rotating out · Semiconductor tariffs headwind · 4/4 pre-earnings wins but NOT in current downtrend</div>
+            </div>
+
+            <!-- IVV ─ CONSIDER -->
+            <div class="trade-card tc-wait">
+                <div class="tc-head">
+                    <span class="tc-sym">IVV <span style="font-size:10px;color:var(--text-3)">ASX</span></span>
+                    <span class="tc-badge badge-watch">CONSIDER</span>
+                </div>
+                <div class="tc-sub">S&amp;P 500 ETF (AUD) · 4–6 week hold · Quarter-end catalyst</div>
+                <div class="tc-grid">
+                    <div>
+                        <div class="tc-price-label">Entry</div>
+                        <div class="tc-price-val c-blue">A$62–63</div>
+                    </div>
+                    <div>
+                        <div class="tc-price-label">Target</div>
+                        <div class="tc-price-val c-green">A$67–68</div>
+                    </div>
+                    <div>
+                        <div class="tc-price-label">Stop Loss</div>
+                        <div class="tc-price-val c-red">A$57–58</div>
+                    </div>
+                </div>
+                <div class="conf-row">
+                    <span style="font-size:9px;color:var(--text-3)">Confidence</span>
+                    <div class="conf-bar"><div class="conf-fill" style="width:55%;background:var(--gold)"></div></div>
+                    <span class="conf-score c-gold">5.5/10</span>
+                </div>
+                <div class="tc-note">~7% upside · April earnings season catalyst · Quarter-end institutional buying · Monitor Iran risk</div>
+            </div>
+
+            <div style="font-size:9px;color:var(--text-3);margin-top:2px;padding:6px;background:var(--bg-3);border-radius:5px">
+                ⚠ NOT ENTERING: ORCL — wait for confirmed floor above $118 52-week low
+            </div>
+        </div>
+
+        <!-- New Short-Term Picks -->
+        <div>
+            <div class="sec-label">
+                <span>New Short-Term Ideas</span>
+                <span class="tag tag-purple">AI/Tech</span>
+            </div>
+            <div id="new-picks-list"></div>
+        </div>
+
+        <!-- Earnings Calendar -->
+        <div>
+            <div class="sec-label">
+                <span>Earnings Calendar</span>
+                <span style="font-size:9px;color:var(--text-3)">Sell day BEFORE</span>
+            </div>
+            <div class="card">
+                <div class="earn-row">
+                    <span class="earn-date">Apr 16</span>
+                    <span class="earn-sym">TSM</span>
+                    <span class="earn-days ed-hot" id="ed-tsm">—</span>
+                    <span class="tag tag-red">ACTIVE</span>
+                </div>
+                <div class="earn-row">
+                    <span class="earn-date">Apr 23</span>
+                    <span class="earn-sym">AMZN</span>
+                    <span class="earn-days ed-soon" id="ed-amzn">—</span>
+                    <span class="tag tag-gold">SOON</span>
+                </div>
+                <div class="earn-row">
+                    <span class="earn-date">Apr 28</span>
+                    <span class="earn-sym">MSFT</span>
+                    <span class="earn-days ed-soon" id="ed-msft">—</span>
+                    <span class="tag tag-gold">SOON</span>
+                </div>
+                <div class="earn-row">
+                    <span class="earn-date">Apr 28</span>
+                    <span class="earn-sym">NXPI</span>
+                    <span class="earn-days ed-soon" id="ed-nxpi">—</span>
+                    <span class="tag tag-blue">WATCH</span>
+                </div>
+                <div class="earn-row">
+                    <span class="earn-date">May 20</span>
+                    <span class="earn-sym">NVDA</span>
+                    <span class="earn-days ed-far" id="ed-nvda">—</span>
+                    <span class="tag tag-blue">WATCH</span>
+                </div>
+                <div class="earn-row">
+                    <span class="earn-date">Jun 2</span>
+                    <span class="earn-sym">CRWD</span>
+                    <span class="earn-days ed-far" id="ed-crwd">—</span>
+                    <span class="tag tag-blue">WATCH</span>
+                </div>
+                <div class="earn-row">
+                    <span class="earn-date">Jun 16</span>
+                    <span class="earn-sym">ORCL</span>
+                    <span class="earn-days ed-far" id="ed-orcl">—</span>
+                    <span class="tag tag-blue">WATCH</span>
+                </div>
+            </div>
+            <div style="font-size:9px;color:var(--text-3);margin-top:5px">Pre-earnings window opens 2–3 weeks before. Strategy requires confirmed UPTREND.</div>
+        </div>
+
+        <!-- Macro Risk Radar -->
+        <div>
+            <div class="sec-label">Macro Risk Radar</div>
+            <div class="card">
+                <div class="risk-row">
+                    <div class="risk-dot rdot-hi"></div>
+                    <div class="risk-body"><strong>US–Iran War (High)</strong>Operation Epic Fury · Feb 28 · Hormuz partially blocked · Oil ~$111 · Any escalation = bad for tech longs</div>
+                </div>
+                <div class="risk-row">
+                    <div class="risk-dot rdot-hi"></div>
+                    <div class="risk-body"><strong>Fed Rate Hike Risk (High)</strong>Probability >50% threshold crossed · Stagflation concern · Hike = severe tech selloff</div>
+                </div>
+                <div class="risk-row">
+                    <div class="risk-dot rdot-med"></div>
+                    <div class="risk-body"><strong>Trump Tariffs (Medium)</strong>25% semis + autos · Software/cloud EXEMPT · Chip stocks vulnerable</div>
+                </div>
+                <div class="risk-row">
+                    <div class="risk-dot rdot-med"></div>
+                    <div class="risk-body"><strong>ISM Manufacturing (Monitor)</strong>1st Wed of month · &gt;50 = hold longs · &lt;49 = tighten stops immediately</div>
+                </div>
+                <div class="risk-row">
+                    <div class="risk-dot rdot-med"></div>
+                    <div class="risk-body"><strong>Non-Farm Payrolls (Monitor)</strong>1st Friday of month · Biggest single monthly market mover</div>
+                </div>
+                <div class="risk-row">
+                    <div class="risk-dot rdot-med"></div>
+                    <div class="risk-body"><strong>ARK/Cathie Wood (Medium)</strong>Rotating OUT of NVDA + chips · Institutional selling signal</div>
+                </div>
+                <div class="risk-row">
+                    <div class="risk-dot rdot-lo"></div>
+                    <div class="risk-body"><strong>Reddit/WSB Sentiment</strong>USO (oil ETF) dominating · War narrative suppressing tech sentiment</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pre-Earnings Strategy Stats -->
+        <div>
+            <div class="sec-label">Pre-Earnings Strategy</div>
+            <div class="card">
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-big c-green">80%</div>
+                        <div class="stat-small">Win Rate</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-big c-blue">16/20</div>
+                        <div class="stat-small">Last 12 Months</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-big c-gold">4/4</div>
+                        <div class="stat-small">NVDA &amp; TSM</div>
+                    </div>
+                </div>
+                <div style="font-size:9px;color:var(--text-3);margin-top:8px;line-height:1.6">
+                    Buy 2–3 weeks before · Sell DAY BEFORE report · UPTREND required — don't buy falling knives<br>
+                    <span class="c-gold">⚠ ORCL Sep '25: strategy gave +4.5% but stock +40% post-earnings. Capped upside risk on blowout beats.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Oracle Thesis -->
+        <div>
+            <div class="sec-label">Oracle Thesis (Reference)</div>
+            <div class="card" style="font-size:10px; line-height:1.6; color:var(--text-2)">
+                <div style="margin-bottom:5px"><strong class="c-green">Bull:</strong> RPO $553B (+325% YoY) · OCI +84% · FCF waterfall when capex peaks ~FY2027 · Ellison on Trump tech panel · 76% analyst upside</div>
+                <div><strong class="c-red">Bear:</strong> Negative FCF (-$24.7B TTM) · $130B debt · $50B capex FY26 · FCF recovery FY2029–30 · ~60% backlog from OpenAI concentration</div>
+                <div style="margin-top:5px;color:var(--text-3)">Verdict: Still in technical downtrend. Wait for confirmed floor above $118 52-week low.</div>
+            </div>
+        </div>
+
+    </div><!-- /left -->
+
+    <!-- ────────────────── CENTER ────────────────── -->
+    <div id="center">
+
+        <!-- Watchlist -->
+        <div id="watchlist-area">
+            <div class="sec-label" style="margin-bottom:8px">
+                <span>Watchlist</span>
+                <div style="display:flex;gap:6px;align-items:center">
+                    <span style="font-size:9px;color:var(--text-3)">Click to chart</span>
+                    <button class="btn-xs" onclick="openAddStock()" style="font-size:10px">+ Add Ticker</button>
+                </div>
+            </div>
+            <div class="watchlist-grid" id="wl-grid"></div>
+        </div>
+
+        <!-- Chart -->
+        <div id="chart-area">
+            <div class="chart-box">
+                <div class="chart-toolbar">
+                    <div class="chart-btns" id="chart-btns">
+                        <!-- Built dynamically from watchlist -->
+                    </div>
+                    <div class="ticker-search-wrap">
+                        <span class="ticker-search-icon">🔍</span>
+                        <input id="ticker-search" type="text" placeholder="Search ticker or company…"
+                               oninput="searchTickers(this.value)"
+                               onfocus="if(this.value) searchTickers(this.value)"
+                               onkeydown="handleTickerSearchKey(event)">
+                        <div id="ticker-results"></div>
+                        <span style="font-size:10px;color:var(--text-3);white-space:nowrap">TradingView · Daily · AEST</span>
+                    </div>
+                </div>
+                <div id="tradingview-main"></div>
+            </div>
+        </div>
+
+    </div><!-- /center -->
+
+    <!-- ────────────────── RIGHT SIDEBAR ────────────────── -->
+    <div id="right">
+
+        <!-- Tab bar -->
+        <div class="right-tab-bar">
+            <button class="right-tab active" id="tab-news"     onclick="showTab('news')">📰 News</button>
+            <button class="right-tab"        id="tab-analysis" onclick="showTab('analysis')">🔍 Chart Insights</button>
+        </div>
+
+        <!-- News header -->
+        <div class="right-news-header" id="news-header-row">
+            <span class="sec-label" style="margin-bottom:0">Market News</span>
+            <div style="display:flex;gap:6px;align-items:center">
+                <span class="market-dot dot-open" style="width:6px;height:6px"></span>
+                <span style="font-size:9px;color:var(--text-3)">5m refresh</span>
+                <button class="btn-xs" onclick="fetchNews()">↻ Refresh</button>
+            </div>
+        </div>
+
+        <!-- News filter -->
+        <div class="right-filter-bar" id="news-filter-row">
+            <button class="btn active" style="padding:3px 8px;font-size:10px" onclick="setFilter('all',this)">All</button>
+            <button class="btn" style="padding:3px 8px;font-size:10px" onclick="setFilter('tech',this)">Tech</button>
+            <button class="btn" style="padding:3px 8px;font-size:10px" onclick="setFilter('macro',this)">Macro</button>
+            <button class="btn" style="padding:3px 8px;font-size:10px" onclick="setFilter('ai',this)">AI/Chips</button>
+        </div>
+
+        <!-- News feed -->
+        <div id="news-feed">
+            <div class="news-loading">Loading market news…</div>
+        </div>
+
+        <!-- Analysis panel -->
+        <div id="analysis-panel">
+            <div class="news-loading" style="color:var(--text-3)">Click a stock to see chart insights</div>
+        </div>
+
+        <!-- ETF section -->
+        <div class="right-etf-section">
+            <div class="sec-label" style="margin-bottom:7px">
+                <span>ETF Watchlist</span>
+                <span style="font-size:9px;color:var(--text-3)">Click to chart</span>
+            </div>
+            <div style="font-size:9px;color:var(--text-3);margin-bottom:4px">ASX / AUD</div>
+            <div class="etf-grid" style="margin-bottom:8px">
+                <div class="etf-card" onclick="switchChartSym('ASX:NDQ')">
+                    <div class="etf-sym">NDQ</div>
+                    <div class="etf-name">Nasdaq 100</div>
+                </div>
+                <div class="etf-card" onclick="switchChartSym('ASX:RBTZ')">
+                    <div class="etf-sym">RBTZ</div>
+                    <div class="etf-name">Robotics &amp; AI</div>
+                </div>
+                <div class="etf-card" onclick="switchChartSym('ASX:HACK')">
+                    <div class="etf-sym">HACK</div>
+                    <div class="etf-name">Cybersecurity</div>
+                </div>
+                <div class="etf-card" onclick="switchChartSym('ASX:IVV')" style="border-color:var(--gold)">
+                    <div class="etf-sym c-gold">IVV</div>
+                    <div class="etf-name">S&amp;P 500 AUD</div>
+                    <div class="tag tag-gold" style="margin-top:3px;font-size:8px">5.5/10</div>
+                </div>
+            </div>
+            <div style="font-size:9px;color:var(--text-3);margin-bottom:4px">US / USD</div>
+            <div class="etf-grid">
+                <div class="etf-card" onclick="switchChartSym('AMEX:SPY')">
+                    <div class="etf-sym">SPY</div>
+                    <div class="etf-name">S&amp;P 500</div>
+                </div>
+                <div class="etf-card" onclick="switchChartSym('NASDAQ:QQQ')">
+                    <div class="etf-sym">QQQ</div>
+                    <div class="etf-name">Nasdaq 100</div>
+                </div>
+                <div class="etf-card" onclick="switchChartSym('NASDAQ:SMH')">
+                    <div class="etf-sym">SMH</div>
+                    <div class="etf-name">Semiconductors</div>
+                </div>
+                <div class="etf-card" onclick="switchChartSym('AMEX:BOTZ')">
+                    <div class="etf-sym">BOTZ</div>
+                    <div class="etf-name">Robotics &amp; AI</div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /right -->
+
+</div><!-- /main -->
+
+<!-- Sidebar collapse toggles -->
+<button class="sidebar-toggle" id="toggle-left" onclick="toggleSidebar('left')" title="Toggle left panel">◀</button>
+<button class="sidebar-toggle" id="toggle-right" onclick="toggleSidebar('right')" title="Toggle right panel">▶</button>
+</div><!-- /main-wrap -->
+
+<!-- ══════════════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════════════ -->
+<footer>
+    <span>⚠ Personal research only — not financial advice — Stake (long only, no margin) · IBKR for shorts</span>
+    <span>Target: 25%+ on 12-month holds · A$3 flat brokerage · 0.55% AUD→USD FX · ASX min A$500</span>
+    <span id="footer-updated">—</span>
+</footer>
+
+<!-- ══════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════ -->
+<script>
+
+// ─────────────────────────────────────────────────────────
+// NEW SHORT-TERM PICKS
+// ─────────────────────────────────────────────────────────
+const NEW_PICKS = [
+    {
+        sym: 'META', tv: 'NASDAQ:META', name: 'Meta Platforms',
+        signal: 'BUY WHEN', signalClass: 'badge-wait',
+        trigger: 'Pre-earnings window ~Apr 1. Needs 2 green days to confirm uptrend.',
+        timeframe: '3–4 weeks', risk: 'MEDIUM', riskCol: 'var(--gold)',
+        thesis: 'AI advertising + Llama 4 launch catalyst. Software/ads are tariff-exempt. Earnings Apr 23 — same pre-earnings play as TSM.',
+    },
+    {
+        sym: 'PLTR', tv: 'NYSE:PLTR', name: 'Palantir Technologies',
+        signal: 'WATCH', signalClass: 'badge-watch',
+        trigger: 'Wait for broad market floor — high beta stock, bleeds hard in selloffs.',
+        timeframe: '2–6 weeks', risk: 'HIGH', riskCol: 'var(--red)',
+        thesis: 'US govt AI contracts (AIP platform). When it moves, it moves 20-30%. Buy on confirmed bounce only.',
+    },
+    {
+        sym: 'AVGO', tv: 'NASDAQ:AVGO', name: 'Broadcom',
+        signal: 'WATCH', signalClass: 'badge-watch',
+        trigger: 'Needs uptrend confirmation above 20-DMA after market stabilises.',
+        timeframe: '3–6 weeks', risk: 'MEDIUM', riskCol: 'var(--gold)',
+        thesis: 'Builds custom AI ASICs for Google, Meta, ByteTok. TSMC "fully stretched" — Broadcom is the reason.',
+    },
+    {
+        sym: 'AMD', tv: 'NASDAQ:AMD', name: 'Advanced Micro Devices',
+        signal: 'WATCH', signalClass: 'badge-watch',
+        trigger: 'Look for floor + pre-earnings setup. Earnings late April.',
+        timeframe: '2–4 weeks', risk: 'MEDIUM', riskCol: 'var(--gold)',
+        thesis: 'Cheaper NVDA proxy. Mi300X AI GPU gaining data centre share. Deep in correction = bigger bounce when market turns.',
+    },
+    {
+        sym: 'ARM', tv: 'NASDAQ:ARM', name: 'Arm Holdings',
+        signal: 'WATCH', signalClass: 'badge-watch',
+        trigger: 'Market stabilisation + 2 green days with volume.',
+        timeframe: '3–6 weeks', risk: 'MEDIUM', riskCol: 'var(--gold)',
+        thesis: 'Royalty on every AI chip (NVDA, AMD, Apple, Qualcomm all pay ARM). Pure picks-and-shovels — no manufacturing tariff risk.',
+    },
+];
+
+function buildNewPicks() {
+    const list = document.getElementById('new-picks-list');
+    if (!list) return;
+    list.innerHTML = '';
+    NEW_PICKS.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'new-pick-card';
+        card.onclick = () => switchChartSym(p.tv, p.sym);
+
+        const sigColors = { 'badge-active': 'var(--green)', 'badge-wait': 'var(--gold)', 'badge-watch': 'var(--blue)', 'badge-no': 'var(--red)' };
+        const sigBg    = { 'badge-active': 'var(--green-dim)', 'badge-wait': 'var(--gold-dim)', 'badge-watch': 'var(--blue-dim)', 'badge-no': 'var(--red-dim)' };
+
+        card.innerHTML = `
+            <div class="new-pick-head">
+                <span class="new-pick-sym">${p.sym} <span style="font-size:10px;color:var(--text-3);font-weight:400">${p.name}</span></span>
+                <span class="new-pick-signal" style="background:${sigBg[p.signalClass]};color:${sigColors[p.signalClass]}">${p.signal}</span>
+            </div>
+            <div class="new-pick-thesis">${p.thesis}</div>
+            <div class="new-pick-footer">
+                <span class="tag tag-purple">Hold: ${p.timeframe}</span>
+                <span style="font-size:9px;font-weight:600;color:${p.riskCol}">Risk: ${p.risk}</span>
+                <span style="font-size:9px;color:var(--text-3);margin-left:auto">Click to chart →</span>
+            </div>
+            <div style="font-size:9px;color:var(--text-2);margin-top:5px;padding-top:5px;border-top:1px solid var(--border-light)">
+                <strong style="color:var(--text-3)">Entry trigger:</strong> ${p.trigger}
+            </div>
+        `;
+        list.appendChild(card);
+    });
+}
+
+// ─────────────────────────────────────────────────────────
+// TAB SWITCHING
+// ─────────────────────────────────────────────────────────
+function showTab(tab) {
+    const isNews = tab === 'news';
+    document.getElementById('tab-news').classList.toggle('active', isNews);
+    document.getElementById('tab-analysis').classList.toggle('active', !isNews);
+    document.getElementById('news-header-row').style.display = isNews ? '' : 'none';
+    document.getElementById('news-filter-row').style.display = isNews ? '' : 'none';
+    document.getElementById('news-feed').style.display = isNews ? '' : 'none';
+    const ap = document.getElementById('analysis-panel');
+    ap.classList.toggle('visible', !isNews);
+}
+
+// ─────────────────────────────────────────────────────────
+// CHART INSIGHTS DATA
+// ─────────────────────────────────────────────────────────
+const INSIGHTS = {
+    'NYSE:TSM': {
+        sym: 'TSM', name: 'Taiwan Semiconductor',
+        rec: 'BUY NOW', recClass: 'badge-active',
+        holdPeriod: '~2 weeks', stTarget: '$345–350', stReturn: '+6–8%',
+        buyTrigger: null,
+        exitRule: 'Sell the day BEFORE Apr 16 earnings. Do not hold through the report.',
+        summary: '<strong>Your clearest short-term buy right now.</strong> Pre-earnings window is open — earnings Apr 16, that gives you ~2 weeks to capture the run-up. Historical record is <strong>4 from 4</strong> pre-earnings wins on TSM. Insider buying confirmed Mar 24. TSMC capacity is fully stretched per Broadcom. Sell before Apr 16, bank the gain, move on.',
+        levels: [
+            { label: 'Entry Zone', val: '$325–328', col: 'var(--blue)' },
+            { label: '12M Analyst Target', val: '$430', col: 'var(--green)' },
+            { label: 'Trade Target', val: '$345–350', col: 'var(--green)' },
+            { label: 'Stop Loss', val: '$310', col: 'var(--red)' },
+        ],
+        signals: [
+            { label: 'Pre-earnings window', val: 'OPEN', col: 'var(--green)' },
+            { label: 'Historical win rate', val: '4/4 (100%)', col: 'var(--green)' },
+            { label: 'Insider activity', val: 'BUYING (Mar 24)', col: 'var(--green)' },
+            { label: 'Relative strength', val: 'Strong vs market', col: 'var(--green)' },
+            { label: 'Semiconductor tariffs', val: '25% — risk', col: 'var(--red)' },
+            { label: 'Confidence', val: '6/10', col: 'var(--blue)' },
+        ],
+        bull: [
+            '4/4 pre-earnings wins — strongest pattern on your watchlist',
+            'Insider buying Mar 24 is a concrete near-term signal',
+            'Broadcom CEO confirmed TSMC capacity "fully stretched" — demand is real',
+            'AI chip demand from NVDA, AMD, Apple, Qualcomm all routes through TSMC',
+            'Sell day BEFORE Apr 16 — you capture the run-up, not the earnings risk',
+        ],
+        bear: [
+            'US-Iran war: any oil spike hits broad market, including TSM longs',
+            '25% semiconductor tariff risk — TSM manufactures in Taiwan for US clients',
+            'S&P below 200-DMA — bad macro backdrop for any long position',
+            'Fed rate hike risk >50% — would cause broad selloff if confirmed',
+        ],
+        watch: 'Sell the day BEFORE Apr 16. Do not hold through the report. Monitor Iran headlines daily — an escalation is your stop-out signal before stop loss triggers. Check oil price each morning: if Brent spikes above $120, tighten stop to $315.',
+        upside: 32,
+    },
+    'NASDAQ:NVDA': {
+        sym: 'NVDA', name: 'NVIDIA Corporation',
+        rec: 'DO NOT BUY YET', recClass: 'badge-no',
+        holdPeriod: '2–3 weeks (once triggered)', stTarget: '$182–185', stReturn: '+8–10%',
+        buyTrigger: 'NVDA closes above $175 AND holds that level the next session — only then enter $167–170',
+        exitRule: 'Sell before May 20 earnings. Trail stop up as price rises.',
+        summary: '<strong>Do not buy yet.</strong> As of late March, NVDA shows 21 bearish vs 5 bullish technical signals — worst reading on your list. The trigger is specific: close above $175 and hold it the next day. That flips the short-term picture. Until then, every dip is a falling knife. The setup becomes high-conviction once triggered — pre-earnings window opens ~May 6.',
+        levels: [
+            { label: 'Buy trigger', val: '>$175 × 2 sessions', col: 'var(--gold)' },
+            { label: 'Entry once triggered', val: '$167–170', col: 'var(--blue)' },
+            { label: 'Short-term target', val: '$182–185', col: 'var(--green)' },
+            { label: 'Stop loss', val: '$155', col: 'var(--red)' },
+        ],
+        signals: [
+            { label: 'Buy signal', val: 'NOT TRIGGERED', col: 'var(--red)' },
+            { label: 'Technical signals', val: '21 bear / 5 bull', col: 'var(--red)' },
+            { label: 'ARK / Cathie Wood', val: 'ROTATING OUT', col: 'var(--red)' },
+            { label: 'Semiconductor tariffs', val: '25% — direct hit', col: 'var(--red)' },
+            { label: 'Pre-earn window', val: 'Opens ~May 6', col: 'var(--gold)' },
+            { label: 'Historical pre-earn', val: '4/4 wins', col: 'var(--green)' },
+        ],
+        bull: [
+            '<strong>Once $175 breaks:</strong> triggers short-covering + momentum buyers — could move fast',
+            '4/4 pre-earnings wins on your strategy — strongest historical signal in your playbook',
+            'AI robotics platform (Isaac GR00T N1, Jetson T4000) is a genuine multi-year growth engine',
+            'Deeply oversold at current levels — bounce when market stabilises could be sharp',
+        ],
+        bear: [
+            'Buying before the trigger fires = catching a falling knife — your strategy rule is clear',
+            'ARK actively rotating OUT — institutional selling creates a ceiling on near-term rallies',
+            '25% semiconductor tariffs are a direct margin headwind for NVDA customers',
+            'No confirmed floor yet — could test lower before recovering',
+        ],
+        watch: '<strong>Your exact trigger: NVDA closes above $175 AND next session also closes above $175.</strong> Two closes above $175 = buy signal. Enter $167–170 range, stop at $155, target $182–185. If that trigger fires, this becomes your second-best setup after TSM.',
+        upside: null,
+    },
+    'NASDAQ:MSFT': {
+        sym: 'MSFT', name: 'Microsoft Corporation',
+        rec: 'BUY WHEN SIGNAL FIRES', recClass: 'badge-wait',
+        holdPeriod: '3–4 weeks', stTarget: '$380–385', stReturn: '+6–8%',
+        buyTrigger: 'Two consecutive green days with above-average volume. Pre-earnings window opens ~Apr 7.',
+        exitRule: 'Sell before Apr 28 earnings. Stop at $342.',
+        summary: 'MSFT is at its <strong>most oversold in a decade</strong> and is 100% tariff-immune (software + cloud exempt). The setup is building — you just need confirmation that sellers are exhausted. Two green days with volume = institutional buyers stepping in. Once that fires, enter quickly — the pre-earnings window and the oversold bounce thesis both kick in simultaneously.',
+        levels: [
+            { label: 'Buy trigger', val: '2 green days + volume', col: 'var(--gold)' },
+            { label: 'Entry on signal', val: '$356–360', col: 'var(--blue)' },
+            { label: 'Short-term target', val: '$380–385', col: 'var(--green)' },
+            { label: 'Stop loss', val: '$342', col: 'var(--red)' },
+        ],
+        signals: [
+            { label: 'Buy signal', val: 'WAITING', col: 'var(--gold)' },
+            { label: 'Oversold level', val: 'Decade extreme', col: 'var(--green)' },
+            { label: 'Tariff exposure', val: 'EXEMPT ✓', col: 'var(--green)' },
+            { label: 'Pre-earn window', val: 'Opens ~Apr 7', col: 'var(--gold)' },
+            { label: 'Earnings date', val: 'Apr 28', col: 'var(--text-2)' },
+            { label: 'Potential return', val: '+6–8% in 3 weeks', col: 'var(--green)' },
+        ],
+        bull: [
+            '<strong>Tariff-exempt:</strong> MSFT is one of the safest large-caps in this tariff environment',
+            'Decade-low oversold reading — mean reversion bounce alone justifies the trade',
+            'Pre-earnings window Apr 7–27 overlaps with your entry timing — double catalyst',
+            'Azure AI + Copilot: fundamental business is accelerating despite market weakness',
+        ],
+        bear: [
+            'Market still in downtrend — oversold can get more oversold before bouncing',
+            'Fed rate hike probability >50% — hike would hit rate-sensitive growth stocks hardest',
+            'Signal hasn\'t fired yet — patience required, don\'t pre-empt the trigger',
+        ],
+        watch: '<strong>Watch for: two consecutive green closes, both on volume above the 20-day average.</strong> When that fires, enter immediately at $356–360 with a stop at $342. Target $380–385. Sell the day before Apr 28 earnings. This is your best risk/reward setup after TSM.',
+        upside: null,
+    },
+    'NASDAQ:AMZN': {
+        sym: 'AMZN', name: 'Amazon.com Inc.',
+        rec: 'WATCH — WINDOW OPENING', recClass: 'badge-watch',
+        holdPeriod: '3 weeks', stTarget: '$218–225', stReturn: '+9–13%',
+        buyTrigger: 'Uptrend confirmation (price above 20-DMA + 2 green days). Pre-earn window ~Apr 1–3.',
+        exitRule: 'Sell before Apr 23 earnings. Stop at $184.',
+        summary: 'The pre-earnings window opens <strong>around Apr 1–3</strong> — in the next few days. AWS and advertising are tariff-immune. This is shaping up as a parallel play to TSM: buy the window, ride the run-up, sell before the report. The key question is whether AMZN is in an uptrend when the window opens. If yes, this is a live trade.',
+        levels: [
+            { label: 'Buy trigger', val: 'Uptrend + 2 green days', col: 'var(--gold)' },
+            { label: 'Entry zone', val: '~$199–205', col: 'var(--blue)' },
+            { label: 'Short-term target', val: '$218–225', col: 'var(--green)' },
+            { label: 'Stop loss', val: '$184', col: 'var(--red)' },
+        ],
+        signals: [
+            { label: 'Buy signal', val: 'WATCHING', col: 'var(--gold)' },
+            { label: 'Pre-earn window', val: 'Opens ~Apr 1–3', col: 'var(--gold)' },
+            { label: 'Tariff exposure', val: 'AWS/Ads EXEMPT', col: 'var(--green)' },
+            { label: 'Earnings date', val: 'Apr 23', col: 'var(--text-2)' },
+            { label: 'Retail exposure', val: 'Tariff risk', col: 'var(--red)' },
+            { label: 'Uptrend confirmed?', val: 'CHECK NOW', col: 'var(--gold)' },
+        ],
+        bull: [
+            'Pre-earnings window opening NOW — timing is perfect if stock shows uptrend',
+            'AWS dominates cloud AI workloads — fundamental business is strong despite macro',
+            'Tariff-exempt on highest-margin businesses (AWS + ads = ~80% of profit)',
+            'At ~$199 this is well below the $237 max buy price — good margin of safety',
+        ],
+        bear: [
+            'Retail/e-commerce directly exposed to tariff disruption on Chinese goods',
+            'Consumer spending slowdown risk — stagflation hits discretionary spending',
+            'Must confirm uptrend before entering — the rule is non-negotiable',
+        ],
+        watch: '<strong>Check TODAY: is AMZN above its 20-day MA? Has it had 2 recent green days with volume?</strong> If yes → enter around $199–205, stop $184, target $218–225, sell before Apr 23. If no → wait until those conditions are met or the window passes.',
+        upside: null,
+    },
+    'NYSE:ORCL': {
+        sym: 'ORCL', name: 'Oracle Corporation',
+        rec: 'NO ENTRY — WAIT', recClass: 'badge-no',
+        holdPeriod: 'N/A — not yet', stTarget: 'N/A', stReturn: 'N/A',
+        buyTrigger: 'Floor confirmed above $118 (52-week low) — 2–3 sessions holding above support with volume',
+        exitRule: 'Not applicable yet. Pre-earn window opens ~May 27 for Jun 16 earnings.',
+        summary: 'ORCL is still in a <strong>confirmed technical downtrend</strong> with no floor established. The thesis is exceptional (76% upside, $553B RPO backlog, OCI +84%) but the stock needs to stop falling first. Trying to call the bottom here is gambling, not trading. <strong>Wait for the floor signal</strong> — when ORCL bounces off support and holds for 2–3 days with volume, that\'s your entry signal.',
+        levels: [
+            { label: 'Watch level', val: '$118 (52-wk low)', col: 'var(--red)' },
+            { label: 'Entry (on floor signal)', val: '$125–135 range', col: 'var(--blue)' },
+            { label: 'Short-term target', val: '$155–160', col: 'var(--green)' },
+            { label: 'Stop loss', val: '$115', col: 'var(--red)' },
+        ],
+        signals: [
+            { label: 'Buy signal', val: 'NOT TRIGGERED', col: 'var(--red)' },
+            { label: 'Technical trend', val: 'DOWNTREND', col: 'var(--red)' },
+            { label: 'Floor confirmed?', val: 'NO', col: 'var(--red)' },
+            { label: 'RPO backlog', val: '$553B (+325% YoY)', col: 'var(--green)' },
+            { label: 'OCI growth', val: '+84% last quarter', col: 'var(--green)' },
+            { label: 'Earnings date', val: 'Jun 16', col: 'var(--text-2)' },
+        ],
+        bull: [
+            'When the floor signal fires, this has the highest short-term bounce potential on your list',
+            '$553B RPO is real contracted revenue — eventually flows through as FCF',
+            'OCI competing with AWS/Azure means enterprise AI cloud is a genuine growth driver',
+            'Larry Ellison on Trump tech advisory panel — political tailwind',
+        ],
+        bear: [
+            'Stock is still falling — no confirmed bottom, do not try to catch it',
+            'Negative FCF (-$24.7B TTM) and $130B debt make it vulnerable to rate hike',
+            '~60% backlog from OpenAI alone — massive concentration risk',
+            'FCF recovery not until FY2029–2030 — this is a patient thesis',
+        ],
+        watch: '<strong>Set a price alert at $125.</strong> If ORCL hits $125 and then holds for 2 sessions, check volume. If volume is above average on the bounce days, that\'s your floor signal. Enter $125–135, stop $115, short-term target $155–160. Sell before Jun 16 earnings.',
+        upside: null,
+    },
+    'NASDAQ:CRWD': {
+        sym: 'CRWD', name: 'CrowdStrike Holdings',
+        rec: 'WATCH — MAY SETUP', recClass: 'badge-watch',
+        holdPeriod: '2–3 weeks (May)', stTarget: 'TBC at entry', stReturn: 'TBC',
+        buyTrigger: 'Pre-earnings window ~May 12. Needs uptrend + 2 green days before entering.',
+        exitRule: 'Sell before Jun 2 earnings.',
+        summary: 'No action now. Cybersecurity is tariff-immune and CRWD has fully rebuilt from the 2024 outage. The pre-earnings window for Jun 2 earnings opens around <strong>May 12</strong>. That\'s your setup window. Monitor it in early May — if the macro has stabilised by then, this becomes a live 2–3 week trade.',
+        levels: [
+            { label: 'Pre-earn window', val: '~May 12', col: 'var(--gold)' },
+            { label: 'Earnings date', val: 'Jun 2', col: 'var(--text-2)' },
+            { label: 'Tariff exposure', val: 'EXEMPT (software)', col: 'var(--green)' },
+            { label: 'Sector proxy ETF', val: 'HACK on ASX', col: 'var(--blue)' },
+        ],
+        signals: [
+            { label: 'Action now', val: 'NONE — too early', col: 'var(--text-2)' },
+            { label: 'Setup timing', val: 'Check back May 12', col: 'var(--gold)' },
+            { label: 'Tariff exposure', val: 'Zero (software)', col: 'var(--green)' },
+            { label: 'Sector health', val: 'Monitor HACK ETF', col: 'var(--blue)' },
+        ],
+        bull: [
+            'Cybersecurity spend is non-discretionary — enterprise budgets don\'t cut it',
+            'AI-native threat detection is a new revenue stream, not just replacing old product',
+            'Software completely tariff-exempt — no headwind there',
+        ],
+        bear: [
+            'Jul 2024 outage: enterprise clients still nervous, slower renewal cycles',
+            'High valuation multiple — needs strong earnings to justify price',
+            'No catalyst until the May pre-earnings window',
+        ],
+        watch: 'Nothing to do until May 12. Put a calendar reminder: check CRWD on May 12. If the stock is in an uptrend at that point, run your pre-earnings setup. Use HACK ETF as a daily proxy for cybersecurity sector health.',
+        upside: null,
+    },
+    'NASDAQ:TSLA': {
+        sym: 'TSLA', name: 'Tesla Inc.',
+        rec: 'AVOID FOR NOW', recClass: 'badge-no',
+        holdPeriod: 'N/A', stTarget: 'N/A', stReturn: 'N/A',
+        buyTrigger: 'Major Optimus production announcement OR confirmed EV demand recovery. Neither present now.',
+        exitRule: 'N/A',
+        summary: '<strong>Too many headwinds for a short-term trade right now.</strong> EV business hit directly by 25% auto tariffs. Musk brand damage is causing real consumer boycotts. Optimus is real but years from commercial scale. For your AI robotics theme, NVDA or BOTZ are better instruments with less single-stock risk and no tariff exposure.',
+        levels: [
+            { label: 'Auto tariffs', val: '25% — direct hit', col: 'var(--red)' },
+            { label: 'Better robotics play', val: 'NVDA / BOTZ / RBTZ', col: 'var(--blue)' },
+            { label: 'Optimus scale', val: '3–5 years away', col: 'var(--text-2)' },
+            { label: 'Risk level', val: 'HIGH', col: 'var(--red)' },
+        ],
+        signals: [
+            { label: 'Short-term setup', val: 'NONE', col: 'var(--red)' },
+            { label: 'Auto tariffs', val: '25% — direct', col: 'var(--red)' },
+            { label: 'Brand damage', val: 'Ongoing', col: 'var(--red)' },
+            { label: 'Optimus robots', val: 'Real, not near-term', col: 'var(--gold)' },
+        ],
+        bull: [
+            'If Optimus scales: genuinely multi-trillion dollar business — largest upside of any stock on any list',
+            'DOGE government connections could create federal robotics contracts',
+        ],
+        bear: [
+            '25% auto tariffs hit core EV margins — the main business is under direct attack',
+            'Consumer boycotts in Australia, Europe, and North America are measurable and ongoing',
+            'No short-term catalyst — Optimus delivery at scale is FY2028 at the earliest',
+            'NVDA captures the robotics theme at lower risk through Isaac, Jetson, Carbon Robotics',
+        ],
+        watch: 'Skip TSLA for short-term trading. If you want robotics exposure right now, use BOTZ (US) or RBTZ (ASX). Revisit TSLA if: (1) Optimus production ramps meaningfully, or (2) tariff situation resolves and brand damage stabilises.',
+        upside: null,
+    },
+    'AMEX:IVV': {
+        sym: 'IVV', name: 'iShares S&P 500 ETF (ASX)',
+        rec: 'BUY WHEN DATA CONFIRMS', recClass: 'badge-wait',
+        holdPeriod: '4–6 weeks', stTarget: 'A$67–68', stReturn: '+7%',
+        buyTrigger: 'ISM Manufacturing >50 (1st Wed April) AND Non-Farm Payrolls strong (1st Fri April)',
+        exitRule: 'Sell after April earnings season peaks (~late April). Stop A$57–58.',
+        summary: 'S&P 500 is down 8.74% from its January high, on a 5-week losing streak, below the 200-DMA. The contrarian short-term case: <strong>quarter-end institutional rebalancing + April earnings season</strong> could trigger a sharp 1–2 week bounce. This is a tactical trade, not a conviction hold. Wait for ISM and NFP data in early April before committing.',
+        levels: [
+            { label: 'Entry zone', val: 'A$62–63', col: 'var(--blue)' },
+            { label: 'Short-term target', val: 'A$67–68', col: 'var(--green)' },
+            { label: 'Stop loss', val: 'A$57–58', col: 'var(--red)' },
+            { label: 'Hold period', val: '4–6 weeks', col: 'var(--text-2)' },
+        ],
+        signals: [
+            { label: 'Buy signal', val: 'WAIT FOR DATA', col: 'var(--gold)' },
+            { label: 'ISM (1st Wed Apr)', val: 'NEED >50', col: 'var(--gold)' },
+            { label: 'NFP (1st Fri Apr)', val: 'NEED STRONG', col: 'var(--gold)' },
+            { label: 'S&P vs 200-DMA', val: 'BELOW', col: 'var(--red)' },
+            { label: 'Quarter-end buying', val: 'Expected Mar 28–31', col: 'var(--green)' },
+            { label: 'Confidence', val: '5.5/10', col: 'var(--gold)' },
+        ],
+        bull: [
+            'Five consecutive down weeks is a historically rare setup — mean reversion is statistically likely',
+            'Quarter-end rebalancing (Mar 28–31) typically drives institutional buying',
+            'April earnings season: if tech earnings beat, the rally could be fast and sharp',
+            'AUD-denominated — no FX conversion cost on Stake',
+        ],
+        bear: [
+            'Fed rate hike >50% probability — a hike announcement kills this trade immediately',
+            'Iran war escalation + oil spike = bad for consumer and corporate margins',
+            'Below 200-DMA means technically still a downtrend — you\'re trading against the trend',
+        ],
+        watch: '<strong>Decision point: April 2 (ISM) and April 4 (NFP).</strong> If ISM >50 AND NFP strong → buy IVV at A$62–63, stop A$57–58, target A$67–68. If either misses → stand down, macro not supportive. This is a data-dependent trade.',
+        upside: null,
+    },
+    'AMEX:SPY': {
+        sym: 'SPY', name: 'SPDR S&P 500 ETF (USD)',
+        rec: 'USE IVV INSTEAD', recClass: 'badge-watch',
+        holdPeriod: '4–6 weeks', stTarget: 'TBC', stReturn: '~7%',
+        buyTrigger: 'Same as IVV — but prefer IVV on ASX to avoid 0.55% FX fee.',
+        exitRule: 'Same thesis as IVV.',
+        summary: 'Same S&P 500 trade as IVV but in USD. For a 4–6 week tactical trade, the 0.55% Stake FX conversion fee makes IVV (ASX, AUD-denominated) the better instrument. Use SPY only if you already hold USD cash in your Stake wallet.',
+        levels: [
+            { label: 'S&P 500 drawdown', val: '-8.74% from high', col: 'var(--red)' },
+            { label: 'FX fee', val: '0.55% AUD→USD', col: 'var(--gold)' },
+            { label: 'Preferred option', val: 'IVV on ASX', col: 'var(--blue)' },
+            { label: 'Same thesis', val: 'See IVV', col: 'var(--text-2)' },
+        ],
+        signals: [
+            { label: 'Action', val: 'Prefer IVV (ASX)', col: 'var(--blue)' },
+            { label: 'FX cost penalty', val: '0.55% one-time', col: 'var(--gold)' },
+            { label: 'Trend', val: 'Below 200-DMA', col: 'var(--red)' },
+        ],
+        bull: ['Same as IVV — quarter-end buying, April earnings season, 5-week mean reversion'],
+        bear: ['FX fee makes this worse than IVV for AUD-based traders', 'Same macro risks as IVV'],
+        watch: 'Use IVV on the ASX instead. Only use SPY if you have USD sitting idle in your Stake account.',
+        upside: null,
+    },
+    'NASDAQ:QQQ': {
+        sym: 'QQQ', name: 'Invesco Nasdaq 100 ETF',
+        rec: 'WATCH', recClass: 'badge-watch',
+        holdPeriod: '2–4 weeks', stTarget: 'TBC', stReturn: '+8–12% if bounce',
+        buyTrigger: 'Same macro data triggers as IVV — but higher risk. Only enter if ISM + NFP strong.',
+        exitRule: 'Sell at first sign of rally stalling. Tight stops on this one.',
+        summary: 'Nasdaq is in an official correction (-10%+). Higher beta than SPY — bigger falls AND bigger bounces. If the April macro data comes in strong, QQQ will bounce harder than IVV. But it also has more tariff risk (NVDA, AMD, Broadcom are top 10 holdings and all face 25% tariffs). Higher risk, higher reward than IVV.',
+        levels: [
+            { label: 'Status', val: 'In correction >-10%', col: 'var(--red)' },
+            { label: 'Buy trigger', val: 'Strong ISM + NFP', col: 'var(--gold)' },
+            { label: 'Tariff exposure', val: 'Mixed ~20% chips', col: 'var(--gold)' },
+            { label: 'ASX equiv', val: 'NDQ', col: 'var(--blue)' },
+        ],
+        signals: [
+            { label: 'Nasdaq status', val: 'In correction', col: 'var(--red)' },
+            { label: 'Chip tariff risk', val: '~20% of holdings', col: 'var(--red)' },
+            { label: 'Software holdings', val: 'Tariff exempt', col: 'var(--green)' },
+            { label: 'Beta vs SPY', val: 'Higher — bigger moves', col: 'var(--gold)' },
+        ],
+        bull: [
+            'Higher beta = if the bounce comes, QQQ moves more than IVV or SPY',
+            'Nasdaq recovers faster than S&P when sentiment turns — historical pattern',
+            'Software/cloud exemption protects MSFT, AMZN, GOOGL (huge QQQ weights)',
+        ],
+        bear: [
+            'Semiconductor tariffs directly hit ~20% of QQQ (NVDA, AMD, QCOM, AVGO)',
+            'Correction territory with no confirmed floor — could fall further before bouncing',
+            'Rate hike punishes growth/tech multiples the hardest',
+        ],
+        watch: 'If you want more upside leverage on the April bounce trade, QQQ (or NDQ on ASX) gives you that. Same entry triggers as IVV — strong ISM and NFP. Use NDQ on ASX to avoid the FX fee.',
+        upside: null,
+    },
+    'TVC:GOLD': {
+        sym: 'GOLD', name: 'Gold',
+        rec: 'HOLD YOUR POSITION', recClass: 'badge-active',
+        holdPeriod: 'Ongoing — review if Iran de-escalates', stTarget: 'N/A (you hold)', stReturn: 'N/A',
+        buyTrigger: 'You already hold. Add if: Fed hints at rate cuts OR Iran escalates further.',
+        exitRule: 'Trim if: Iran ceasefire announced, Hormuz fully reopens, or USD strengthens sharply.',
+        summary: 'You hold gold. It is doing exactly what it should in this environment: <strong>US-Iran war + stagflation risk + rate uncertainty</strong> = gold outperforms. This is not the time to sell. The risk is a rapid Iran de-escalation removing the geopolitical premium. Otherwise, hold.',
+        levels: [
+            { label: 'Current level', val: '~$3,100 USD/oz', col: 'var(--gold)' },
+            { label: 'Geopolitical driver', val: 'US-Iran war', col: 'var(--red)' },
+            { label: 'Trim signal', val: 'Iran ceasefire / DXY surge', col: 'var(--red)' },
+            { label: 'Add signal', val: 'Escalation or Fed pivot', col: 'var(--green)' },
+        ],
+        signals: [
+            { label: 'Your position', val: 'OPEN — HOLD', col: 'var(--green)' },
+            { label: 'Geopolitical risk', val: 'HIGH — supportive', col: 'var(--green)' },
+            { label: 'Stagflation risk', val: 'Bullish for gold', col: 'var(--green)' },
+            { label: 'USD (DXY)', val: 'Watch daily', col: 'var(--gold)' },
+        ],
+        bull: [
+            'US-Iran war is not de-escalating — geopolitical premium stays in price',
+            'Stagflation is gold\'s best macro environment: high inflation + slow growth',
+            'Central banks globally are buying gold as USD reserve diversification',
+            'Rate hike fears actually support gold (stagflation narrative vs. growth narrative)',
+        ],
+        bear: [
+            'Sudden Iran ceasefire or Hormuz reopening = geopolitical premium unwinds quickly',
+            'Strong USD surge (if rate hike confirmed) can pressure gold near-term',
+            'Liquidity crunch (if recession fears spike) could see gold sold alongside equities',
+        ],
+        watch: 'Hold. Check the DXY (USD index) and Iran headlines daily. Set a mental stop: if Iran ceasefire is announced, reduce position by 50% immediately. Otherwise, the stagflation thesis is intact and gold should continue performing.',
+        upside: null,
+    },
+    'AMEX:BOTZ': {
+        sym: 'BOTZ', name: 'Global X Robotics & AI ETF',
+        rec: 'WATCH — BUY ON FLOOR', recClass: 'badge-watch',
+        holdPeriod: '4–8 weeks', stTarget: '+15–20% from entry', stReturn: '+15–20%',
+        buyTrigger: 'Market floor confirmed — S&P 500 holds above 200-DMA for 2 sessions, or ISM/NFP strong.',
+        exitRule: 'Trail a stop up — this is a longer hold than individual stock pre-earnings trades.',
+        summary: 'BOTZ is your robotics theme in a single ETF. NVDA declared the "ChatGPT moment for robotics" at CES 2026 — this is an early-cycle theme with years of runway. Not a short 2-week trade — more of a 4–8 week position. Wait for the market floor, then enter. Lower single-stock risk than TSLA or individual robotics names.',
+        levels: [
+            { label: 'Buy trigger', val: 'Market floor confirmed', col: 'var(--gold)' },
+            { label: 'Tariff exposure', val: 'Mixed — hardware', col: 'var(--gold)' },
+            { label: 'ASX equiv', val: 'RBTZ', col: 'var(--blue)' },
+            { label: 'Hold period', val: '4–8 weeks', col: 'var(--text-2)' },
+        ],
+        signals: [
+            { label: 'Buy signal', val: 'WAITING FOR FLOOR', col: 'var(--gold)' },
+            { label: 'Robotics theme', val: 'Early-cycle growth', col: 'var(--green)' },
+            { label: 'NVDA weight', val: 'Significant', col: 'var(--blue)' },
+            { label: 'Tariff exposure', val: 'Some hardware risk', col: 'var(--gold)' },
+        ],
+        bull: [
+            '"ChatGPT moment for robotics" — NVDA at CES 2026. This is the beginning, not the middle.',
+            'Diversified across industrial robots (ABB, Fanuc), surgical (ISRG), and AI chips (NVDA)',
+            'Lower risk than individual robotics stocks — if one name lags, others carry',
+        ],
+        bear: [
+            'Hardware components face tariff headwinds unlike pure software',
+            'Correlated with market selloffs — won\'t hold up if macro deteriorates further',
+        ],
+        watch: 'Wait for the broader market to show a floor (S&P 500 reclaims 200-DMA or macro data turns). Once that happens, enter BOTZ or RBTZ (ASX). This is a 4–8 week hold, not a 2-week flip. It suits your shorter end of the 1 day–3 month window.',
+        upside: null,
+    },
+    'NASDAQ:META': {
+        sym: 'META', name: 'Meta Platforms',
+        rec: 'BUY WHEN SIGNAL FIRES', recClass: 'badge-wait',
+        holdPeriod: '3–4 weeks', stTarget: '+8–12% from entry', stReturn: '+8–12%',
+        buyTrigger: 'Pre-earnings window ~Apr 1–3. Needs 2 green days + volume to confirm uptrend.',
+        exitRule: 'Sell before Apr 23 earnings (same day as AMZN). Stop 5% below entry.',
+        summary: 'META is a <strong>strong pre-earnings setup opening right now</strong>. Advertising revenue is tariff-exempt, Llama 4 is a major AI product launch catalyst, and the stock is deeply oversold alongside MSFT. Earnings Apr 23 — same window as AMZN. The pre-earnings setup on META has historically been strong: AI features driving engagement = advertising pricing power.',
+        levels: [
+            { label: 'Pre-earn window', val: 'Opens ~Apr 1–3', col: 'var(--gold)' },
+            { label: 'Entry on signal', val: 'Check current price', col: 'var(--blue)' },
+            { label: 'Short-term return', val: '+8–12% target', col: 'var(--green)' },
+            { label: 'Stop loss', val: '5% below entry', col: 'var(--red)' },
+        ],
+        signals: [
+            { label: 'Buy signal', val: 'WINDOW OPENING', col: 'var(--gold)' },
+            { label: 'Tariff exposure', val: 'EXEMPT (ads)', col: 'var(--green)' },
+            { label: 'Llama 4 catalyst', val: 'AI product launch', col: 'var(--green)' },
+            { label: 'Earnings date', val: 'Apr 23', col: 'var(--text-2)' },
+            { label: 'Market sentiment', val: 'Oversold', col: 'var(--green)' },
+        ],
+        bull: [
+            'Advertising is 100% tariff-exempt — META is one of the cleanest large-cap setups in this tariff environment',
+            'Llama 4 launch is an AI credibility catalyst — institutional investors will reprice AI exposure',
+            'AI-powered ad targeting is increasing CPM rates across Instagram and Facebook',
+            'Pre-earnings window is opening NOW — you have 3 weeks before the Apr 23 report',
+        ],
+        bear: [
+            'Market still in downtrend — entry needs confirmation, don\'t front-run',
+            'Regulatory risk: EU and US antitrust proceedings ongoing',
+            'High valuation if AI ad thesis doesn\'t materialise in earnings numbers',
+        ],
+        watch: '<strong>Check META chart TODAY.</strong> Is it above its 20-day MA? Has it had 2 green days with volume? If yes, enter immediately — the window is open. If no, watch daily from Apr 1. Target +8–12% in 3 weeks, sell before Apr 23. This is one of the best new setups given tariff immunity.',
+        upside: null,
+    },
+    'NYSE:PLTR': {
+        sym: 'PLTR', name: 'Palantir Technologies',
+        rec: 'WATCH — HIGH BETA', recClass: 'badge-watch',
+        holdPeriod: '2–6 weeks', stTarget: '+20–30% from entry', stReturn: '+20–30%',
+        buyTrigger: 'Confirmed market floor + PLTR uptrend above 20-DMA + 2 green days with volume.',
+        exitRule: 'Trail stop aggressively — PLTR can give back gains fast. Target +20%, trail stop at +10%.',
+        summary: 'PLTR is a high-octane AI government/commercial contract play. When the market turns, PLTR can move <strong>20–30% in 2–3 weeks</strong>. The AIP (AI Platform) is winning US government and DoD contracts at an accelerating pace. <strong>Do not buy during a market selloff</strong> — PLTR bleeds harder than the index in downturns. Wait for confirmed market floor first.',
+        levels: [
+            { label: 'Buy trigger', val: 'Market floor + uptrend', col: 'var(--gold)' },
+            { label: 'Entry on signal', val: 'Check current price', col: 'var(--blue)' },
+            { label: 'Target', val: '+20–30% from entry', col: 'var(--green)' },
+            { label: 'Risk', val: 'HIGH', col: 'var(--red)' },
+        ],
+        signals: [
+            { label: 'Buy signal', val: 'NOT YET', col: 'var(--red)' },
+            { label: 'Beta', val: 'High — volatile', col: 'var(--red)' },
+            { label: 'Gov AI contracts', val: 'Winning — AIP', col: 'var(--green)' },
+            { label: 'Tariff exposure', val: 'EXEMPT (software)', col: 'var(--green)' },
+        ],
+        bull: [
+            'AIP platform is winning US military and intelligence community contracts at scale',
+            'When market recovers, PLTR leads the bounce — beta cuts both ways',
+            'Commercial segment accelerating alongside government — dual growth engines',
+            'Software completely tariff-exempt',
+        ],
+        bear: [
+            'High beta = in a down market, PLTR falls 2–3x the index',
+            'Extremely high valuation multiple — any growth miss is punished severely',
+            'Government contract timing is lumpy — revenue can disappoint any given quarter',
+        ],
+        watch: 'This is a high-risk / high-reward trade for when the market turns. Not for right now. When S&P reclaims the 200-DMA, check PLTR: if it\'s in an uptrend and has 2 green days, enter with a tight stop. Target 20–30% in 2–3 weeks. Size this position smaller than others given the volatility.',
+        upside: null,
+    },
+    'NASDAQ:AVGO': {
+        sym: 'AVGO', name: 'Broadcom',
+        rec: 'WATCH — STRONG SETUP FORMING', recClass: 'badge-watch',
+        holdPeriod: '3–6 weeks', stTarget: '+10–15% from entry', stReturn: '+10–15%',
+        buyTrigger: 'Confirmed uptrend above 20-DMA + 2 green days. Check after April macro data.',
+        exitRule: 'Sell ahead of next earnings. Stop 6% below entry.',
+        summary: 'Broadcom builds the <strong>custom AI ASICs</strong> that power Google, Meta, and ByteDance\'s AI infrastructure. TSMC said capacity is "fully stretched" — much of that demand is Broadcom chips. Unlike NVDA (GPU), Broadcom does custom silicon, which is more defensible. When the market stabilises, AVGO should recover strongly. Watch for the entry signal.',
+        levels: [
+            { label: 'Buy trigger', val: 'Uptrend + 2 green days', col: 'var(--gold)' },
+            { label: 'Entry on signal', val: 'Check current price', col: 'var(--blue)' },
+            { label: 'Short-term target', val: '+10–15% from entry', col: 'var(--green)' },
+            { label: 'Stop loss', val: '6% below entry', col: 'var(--red)' },
+        ],
+        signals: [
+            { label: 'Buy signal', val: 'NOT YET', col: 'var(--gold)' },
+            { label: 'Custom AI ASICs', val: 'Google/Meta/ByteDance', col: 'var(--green)' },
+            { label: 'Semiconductor tariffs', val: '25% — some risk', col: 'var(--red)' },
+            { label: 'Fundamental growth', val: 'AI capex cycle intact', col: 'var(--green)' },
+        ],
+        bull: [
+            'Custom AI chips for hyperscalers is a massive, sticky, growing revenue stream',
+            'TSMC "fully stretched" commentary confirms Broadcom demand is real and current',
+            'AI capex cycle (Google, Meta, Microsoft each guiding $50B+/year) directly flows to Broadcom',
+        ],
+        bear: [
+            '25% semiconductor tariffs create some cost pressure, though most chips are for US hyperscalers',
+            'High dependence on a small number of hyperscaler customers',
+            'Market in downtrend — entry needs confirmation first',
+        ],
+        watch: 'Check AVGO chart after April ISM/NFP data. If the macro picture improves and AVGO is above its 20-DMA with green days, enter. Target +10–15% over 3–6 weeks. This is a solid pick for your AI infrastructure theme.',
+        upside: null,
+    },
+    'NASDAQ:AMD': {
+        sym: 'AMD', name: 'Advanced Micro Devices',
+        rec: 'WATCH — CHEAPER NVDA PROXY', recClass: 'badge-watch',
+        holdPeriod: '2–4 weeks', stTarget: '+10–15% from entry', stReturn: '+10–15%',
+        buyTrigger: 'Pre-earnings window late April. Needs uptrend confirmation. Earnings ~Apr 29.',
+        exitRule: 'Sell before ~Apr 29 earnings. Stop 7% below entry.',
+        summary: 'AMD is the <strong>lower-cost alternative to NVDA</strong> for AI GPU exposure. The Mi300X AI accelerator is winning data centre deployments where NVDA supply is constrained or priced out. AMD is down significantly from highs — deeper correction = bigger potential bounce. Pre-earnings window opens around <strong>Apr 8–10</strong>. Needs uptrend confirmation first.',
+        levels: [
+            { label: 'Pre-earn window', val: '~Apr 8–10', col: 'var(--gold)' },
+            { label: 'Earnings date', val: '~Apr 29', col: 'var(--text-2)' },
+            { label: 'Short-term target', val: '+10–15% from entry', col: 'var(--green)' },
+            { label: 'Stop loss', val: '7% below entry', col: 'var(--red)' },
+        ],
+        signals: [
+            { label: 'Buy signal', val: 'WAITING', col: 'var(--gold)' },
+            { label: 'Pre-earn window', val: 'Opens ~Apr 8', col: 'var(--gold)' },
+            { label: 'NVDA alternative', val: 'Mi300X gaining share', col: 'var(--green)' },
+            { label: 'Tariffs', val: '25% semis — direct', col: 'var(--red)' },
+        ],
+        bull: [
+            'Mi300X AI GPU is winning deals where NVDA H100/H200 is too expensive or supply-constrained',
+            'Pre-earnings window opens early April — same playbook as TSM and MSFT',
+            'Deeper correction than NVDA = more mean-reversion upside when market turns',
+            'Microsoft, Google, and Meta all use AMD alongside NVDA for AI workloads',
+        ],
+        bear: [
+            '25% semiconductor tariffs hit AMD directly — same headwind as NVDA',
+            'NVDA still dominant in AI training; AMD wins more on inference side',
+            'Needs uptrend confirmation before entry — not a bottom-call play',
+        ],
+        watch: 'Set a reminder for Apr 8. Check AMD chart: above 20-DMA? Two green days with volume? If yes, this is a pre-earnings entry. Target +10–15%, sell before Apr 29 earnings. Treat it like a parallel TSM play.',
+        upside: null,
+    },
+    'NASDAQ:ARM': {
+        sym: 'ARM', name: 'Arm Holdings',
+        rec: 'WATCH — ROYALTY PLAY', recClass: 'badge-watch',
+        holdPeriod: '3–6 weeks', stTarget: '+12–18% from entry', stReturn: '+12–18%',
+        buyTrigger: 'Market stabilisation + uptrend above 20-DMA + 2 green days with volume.',
+        exitRule: 'Trail stop up — ARM can run when momentum is with it. Target 12–18%.',
+        summary: 'ARM is unique: it doesn\'t manufacture chips, it <strong>licenses the architecture that runs inside every AI chip</strong>. NVDA uses ARM. AMD uses ARM. Apple uses ARM. Qualcomm uses ARM. Every AI chip deployed = royalty to ARM. Zero manufacturing tariff risk. Pure intellectual property business with compounding AI tailwinds. Strong setup when market recovers.',
+        levels: [
+            { label: 'Buy trigger', val: 'Market floor + uptrend', col: 'var(--gold)' },
+            { label: 'Entry on signal', val: 'Check current price', col: 'var(--blue)' },
+            { label: 'Short-term target', val: '+12–18% from entry', col: 'var(--green)' },
+            { label: 'Tariff exposure', val: 'ZERO', col: 'var(--green)' },
+        ],
+        signals: [
+            { label: 'Buy signal', val: 'WAITING FOR FLOOR', col: 'var(--gold)' },
+            { label: 'Tariff exposure', val: 'ZERO — IP only', col: 'var(--green)' },
+            { label: 'AI chip royalties', val: 'Every chip = revenue', col: 'var(--green)' },
+            { label: 'Valuation', val: 'Premium — high P/E', col: 'var(--red)' },
+        ],
+        bull: [
+            'Every AI chip (NVDA, AMD, Apple, Qualcomm, Samsung) uses ARM — royalties compound with AI',
+            'Zero tariff exposure — pure IP licensing means no manufacturing headwind',
+            'AI boom = more chips shipped = more royalties. Simplest AI thesis on the market.',
+            'SoftBank owns ~90% of ARM — strategic alignment with AI investment theme',
+        ],
+        bear: [
+            'High valuation multiple — expensive if growth disappoints',
+            'RISC-V open-source architecture is a long-term competitive threat to ARM licensing',
+            'High beta in market selloffs despite defensive IP model',
+        ],
+        watch: 'Wait for the market floor. When S&P stabilises, check ARM: above 20-DMA with 2 green days? Enter. Target 12–18% in 3–6 weeks. This is your cleanest tariff-immune AI pick — pure IP, compounding royalties, no manufacturing risk.',
+        upside: null,
+    },
+};
+
+// Fallback for unknown symbols
+const DEFAULT_INSIGHT = {
+    sym: '—', name: 'Select a stock',
+    rec: 'SELECT A STOCK', recClass: 'badge-watch',
+    summary: 'Click any stock button or watchlist card to see detailed chart insights and recommendations for that ticker.',
+    levels: [], signals: [], bull: [], bear: [],
+    watch: 'Use the chart toolbar buttons or the watchlist cards at the top to select a stock.',
+    upside: null,
+};
+
+function renderAnalysis(tvSym) {
+    const d = INSIGHTS[tvSym] || DEFAULT_INSIGHT;
+    const ap = document.getElementById('analysis-panel');
+
+    const recColors = { 'badge-active':'var(--green)', 'badge-wait':'var(--gold)', 'badge-no':'var(--red)', 'badge-watch':'var(--blue)' };
+    const bgMap    = { 'badge-active':'var(--green-dim)', 'badge-wait':'var(--gold-dim)', 'badge-no':'var(--red-dim)', 'badge-watch':'var(--blue-dim)' };
+    const col = recColors[d.recClass] || 'var(--blue)';
+    const bg  = bgMap[d.recClass]    || 'var(--blue-dim)';
+
+    // AI Robotics connection
+    const roboticsSyms = ['NASDAQ:NVDA','NASDAQ:TSLA','AMEX:BOTZ','NASDAQ:ARM','NASDAQ:AMD','NASDAQ:ISRG','NYSE:DE'];
+    const roboticsBadge = roboticsSyms.includes(tvSym)
+        ? `<span style="background:rgba(163,113,247,0.2);color:var(--purple);font-size:9px;padding:2px 7px;border-radius:3px;font-weight:600">🤖 AI Robotics Theme</span>`
+        : '';
+
+    // Short-term trade box
+    const stBoxHTML = (d.holdPeriod && d.holdPeriod !== 'N/A') ? `
+        <div style="background:${bg};border:1px solid ${col};border-radius:7px;padding:10px 12px;margin-bottom:12px">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${col};margin-bottom:8px">Short-Term Trade Plan</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
+                <div>
+                    <div style="font-size:8px;color:var(--text-3);text-transform:uppercase">Hold Period</div>
+                    <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--text-1)">${d.holdPeriod}</div>
+                </div>
+                <div>
+                    <div style="font-size:8px;color:var(--text-3);text-transform:uppercase">ST Target</div>
+                    <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--green)">${d.stTarget}</div>
+                </div>
+                <div>
+                    <div style="font-size:8px;color:var(--text-3);text-transform:uppercase">Expected Return</div>
+                    <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--green)">${d.stReturn}</div>
+                </div>
+            </div>
+            ${d.buyTrigger ? `<div style="font-size:10px;color:var(--text-2);padding:6px 8px;background:rgba(0,0,0,0.3);border-radius:4px;margin-bottom:6px"><strong style="color:var(--gold)">BUY WHEN:</strong> ${d.buyTrigger}</div>` : ''}
+            ${d.exitRule  ? `<div style="font-size:10px;color:var(--text-2);padding:6px 8px;background:rgba(0,0,0,0.3);border-radius:4px"><strong style="color:var(--red)">EXIT:</strong> ${d.exitRule}</div>` : ''}
+        </div>` : '';
+
+    const levelsHTML  = d.levels.map(l => `<div class="ai-level-box"><div class="ai-level-label">${l.label}</div><div class="ai-level-val" style="color:${l.col}">${l.val}</div></div>`).join('');
+    const signalsHTML = d.signals.map(s => `<div class="ai-signal-row"><span class="signal-label">${s.label}</span><span class="signal-val" style="color:${s.col}">${s.val}</span></div>`).join('');
+    const bullHTML = d.bull.map(b => `<li>${b}</li>`).join('');
+    const bearHTML = d.bear.map(b => `<li>${b}</li>`).join('');
+
+    ap.innerHTML = `
+        <div class="ai-header">
+            <span class="ai-sym-badge">${d.sym}</span>
+            <span style="font-size:10px;color:var(--text-3)">${d.name}</span>
+            <span class="ai-rec-badge" style="background:${bg};color:${col};margin-left:auto">${d.rec}</span>
+        </div>
+        ${roboticsBadge ? `<div style="margin-bottom:8px">${roboticsBadge}</div>` : ''}
+
+        ${stBoxHTML}
+
+        <div class="ai-section">
+            <div class="ai-section-title">Setup Summary</div>
+            <div class="ai-body">${d.summary}</div>
+        </div>
+
+        ${d.levels.length ? `<div class="ai-section"><div class="ai-section-title">Key Levels</div><div class="ai-levels">${levelsHTML}</div></div>` : ''}
+        ${d.signals.length ? `<div class="ai-section"><div class="ai-section-title">Signal Checklist</div>${signalsHTML}</div>` : ''}
+        ${d.bull.length ? `<div class="ai-section"><div class="ai-section-title">▲ Bull Case</div><ul class="bullet-list">${bullHTML}</ul></div>` : ''}
+        ${d.bear.length ? `<div class="ai-section"><div class="ai-section-title">▼ Bear Case</div><ul class="bullet-list">${bearHTML}</ul></div>` : ''}
+
+        <div class="ai-section">
+            <div class="ai-section-title">What To Watch / Action</div>
+            <div class="ai-body">${d.watch}</div>
+        </div>
+
+        <div style="margin-top:10px;padding:8px;background:var(--bg-3);border-radius:5px;font-size:9px;color:var(--text-3);line-height:1.6">
+            Research only — not financial advice. Ask the AI Analyst below for deeper analysis or to add this stock to your watchlist.
+        </div>
+    `;
+}
+
+// ─────────────────────────────────────────────────────────
+// WATCHLIST DATA
+// ─────────────────────────────────────────────────────────
+const WATCHLIST = [
+    {
+        sym: 'NVDA', tv: 'NASDAQ:NVDA', name: 'NVIDIA',
+        refPrice: 167, target: 268, entry: '$167–170', stop: '$155',
+        upside: 59, confidence: 3.5, status: 'no', label: 'NOT YET',
+        theme: 'AI/Chips', note: 'Wait: reversal >$175 × 2 sessions'
+    },
+    {
+        sym: 'MSFT', tv: 'NASDAQ:MSFT', name: 'Microsoft',
+        refPrice: 357, target: 594, entry: '$356–360', stop: '$343',
+        upside: 67, confidence: 4.5, status: 'wait', label: 'WAIT',
+        theme: 'Cloud/AI', note: 'Wait: 2 green days + volume signal'
+    },
+    {
+        sym: 'AMZN', tv: 'NASDAQ:AMZN', name: 'Amazon',
+        refPrice: 199, target: 296, entry: '—', stop: '$184',
+        upside: 49, confidence: null, status: 'watch', label: 'WATCH',
+        theme: 'Cloud/AI', note: 'Earnings Apr 23 · Pre-earn window opening'
+    },
+    {
+        sym: 'TSM', tv: 'NYSE:TSM', name: 'TSMC',
+        refPrice: 326, target: 430, entry: '$325–328', stop: '$310',
+        upside: 32, confidence: 6, status: 'active', label: 'ACTIVE',
+        theme: 'Chips/AI Infra', note: 'Pre-earnings window NOW OPEN ✓'
+    },
+    {
+        sym: 'ORCL', tv: 'NYSE:ORCL', name: 'Oracle',
+        refPrice: 140, target: 246, entry: '—', stop: '$118',
+        upside: 76, confidence: null, status: 'no', label: 'WAIT FLOOR',
+        theme: 'Cloud/AI', note: 'Wait: floor above $118 52-wk low'
+    }
+];
+
+const STATUS_COLORS = {
+    active: 'var(--green)', wait: 'var(--gold)',
+    no: 'var(--red)', watch: 'var(--blue)'
+};
+const STATUS_BADGE = {
+    active: 'badge-active', wait: 'badge-wait',
+    no: 'badge-no', watch: 'badge-watch'
+};
+
+function buildWatchlist() {
+    const grid = document.getElementById('wl-grid');
+    WATCHLIST.forEach((s, i) => {
+        const col = STATUS_COLORS[s.status];
+        const isTSM = s.sym === 'TSM';
+        const card = document.createElement('div');
+        card.className = 'wl-card' + (isTSM ? ' wl-selected' : '');
+        card.style.borderColor = col;
+        card.dataset.sym = s.tv;
+        card.dataset.ticker = s.sym;
+        card.onclick = () => {
+            document.querySelectorAll('.wl-card').forEach(c => {
+                c.classList.remove('wl-selected');
+                c.style.borderColor = STATUS_COLORS[WATCHLIST.find(w => w.sym === c.dataset.ticker)?.status] || 'var(--border)';
+            });
+            card.classList.add('wl-selected');
+            card.style.borderColor = 'var(--blue)';
+            switchChartSym(s.tv, s.sym);
+        };
+
+        const confBar = s.confidence
+            ? `<div class="wl-conf-row conf-row">
+                 <span style="font-size:8px;color:var(--text-3)">Conf</span>
+                 <div class="conf-bar"><div class="conf-fill" style="width:${s.confidence*10}%;background:${col}"></div></div>
+                 <span class="conf-score" style="color:${col}">${s.confidence}/10</span>
+               </div>`
+            : '';
+
+        card.innerHTML = `
+            <button class="wl-card-remove" onclick="event.stopPropagation();removeFromWatchlist('${s.sym}')" title="Remove ${s.sym}">✕</button>
+            <div class="wl-head">
+                <div>
+                    <div class="wl-sym">${s.sym}</div>
+                    <div class="wl-name">${s.name}</div>
+                </div>
+                <div style="text-align:right">
+                    <span class="tc-badge ${STATUS_BADGE[s.status]}">${s.label}</span>
+                    <div style="font-size:8px;color:var(--text-3);margin-top:3px">${s.theme}</div>
+                </div>
+            </div>
+            <div class="wl-rows">
+                <div class="wl-row">
+                    <div class="wl-rl">12M Target</div>
+                    <div class="wl-rv c-green mono">${s.target !== '—' ? '$'+s.target : '—'}</div>
+                </div>
+                <div class="wl-row">
+                    <div class="wl-rl">Upside</div>
+                    <div class="wl-rv c-green mono">${s.upside !== '—' ? '+'+s.upside+'%' : '—'}</div>
+                </div>
+                <div class="wl-row">
+                    <div class="wl-rl">Entry</div>
+                    <div class="wl-rv c-blue mono">${s.entry}</div>
+                </div>
+                <div class="wl-row">
+                    <div class="wl-rl">Stop Loss</div>
+                    <div class="wl-rv c-red mono">${s.stop}</div>
+                </div>
+            </div>
+            ${confBar}
+            <div class="wl-note">${s.note}</div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+// ─────────────────────────────────────────────────────────
+// MAIN CHART (TradingView Advanced)
+// ─────────────────────────────────────────────────────────
+let currentSym = 'NYSE:TSM';
+
+function initChart(sym) {
+    currentSym = sym;
+    const container = document.getElementById('tradingview-main');
+    container.innerHTML = '';
+
+    new TradingView.widget({
+        container_id: 'tradingview-main',
+        autosize: true,
+        symbol: sym,
+        interval: 'D',
+        timezone: 'Australia/Brisbane',
+        theme: 'dark',
+        style: '1',
+        locale: 'en',
+        toolbar_bg: '#161b22',
+        enable_publishing: false,
+        allow_symbol_change: true,
+        hide_side_toolbar: false,
+        withdateranges: true,
+        studies: [
+            'MACD@tv-basicstudies',
+            'RSI@tv-basicstudies',
+            'BB@tv-basicstudies',
+            'MASimple@tv-basicstudies'
+        ]
+    });
+}
+
+function switchChart(btn) {
+    const sym = btn.dataset.sym;
+    document.querySelectorAll('#chart-btns .btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    initChart(sym);
+    renderAnalysis(sym);
+    showTab('analysis');
+}
+
+function switchChartSym(tvSym, ticker) {
+    document.querySelectorAll('#chart-btns .btn').forEach(b => {
+        b.classList.remove('active');
+        if (b.dataset.sym === tvSym) b.classList.add('active');
+    });
+    initChart(tvSym);
+    renderAnalysis(tvSym);
+    showTab('analysis');
+}
+
+// ─────────────────────────────────────────────────────────
+// CLOCK & MARKET STATUS
+// ─────────────────────────────────────────────────────────
+function updateClock() {
+    const now = new Date();
+
+    // Brisbane (AEST = UTC+10, no DST)
+    const brisbane = new Date(now.toLocaleString('en-US', { timeZone: 'Australia/Brisbane' }));
+    const hh = String(brisbane.getHours()).padStart(2,'0');
+    const mm = String(brisbane.getMinutes()).padStart(2,'0');
+    const ss = String(brisbane.getSeconds()).padStart(2,'0');
+    document.getElementById('hdr-clock').textContent = `${hh}:${mm}:${ss} AEST`;
+
+    // NY market status
+    const ny = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const day = ny.getDay();
+    const dec = ny.getHours() + ny.getMinutes() / 60;
+    const dot = document.getElementById('mkt-dot');
+    const txt = document.getElementById('mkt-txt');
+    dot.className = 'market-dot';
+
+    if (day === 0 || day === 6) {
+        dot.classList.add('dot-closed');
+        txt.textContent = 'Weekend';
+    } else if (dec >= 9.5 && dec < 16) {
+        dot.classList.add('dot-open');
+        txt.textContent = 'NYSE Open';
+    } else if (dec >= 4 && dec < 9.5) {
+        dot.classList.add('dot-pre');
+        txt.textContent = 'Pre-Market';
+    } else if (dec >= 16 && dec < 20) {
+        dot.classList.add('dot-pre');
+        txt.textContent = 'After-Hours';
+    } else {
+        dot.classList.add('dot-closed');
+        txt.textContent = 'US Closed';
+    }
+}
+
+// ─────────────────────────────────────────────────────────
+// EARNINGS COUNTDOWN
+// ─────────────────────────────────────────────────────────
+function updateEarnings() {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    const entries = [
+        { id: 'ed-tsm',  date: '2026-04-16' },
+        { id: 'ed-amzn', date: '2026-04-23' },
+        { id: 'ed-msft', date: '2026-04-28' },
+        { id: 'ed-nxpi', date: '2026-04-28' },
+        { id: 'ed-nvda', date: '2026-05-20' },
+        { id: 'ed-crwd', date: '2026-06-02' },
+        { id: 'ed-orcl', date: '2026-06-16' },
+    ];
+
+    entries.forEach(e => {
+        const el = document.getElementById(e.id);
+        if (!el) return;
+        const target = new Date(e.date + 'T00:00:00');
+        const diff = Math.round((target - today) / 86400000);
+        if (diff <= 0) {
+            el.textContent = 'TODAY';
+            el.className = 'earn-days ed-hot';
+        } else {
+            el.textContent = diff + 'd';
+            el.className = diff <= 21 ? 'earn-days ed-hot' : diff <= 42 ? 'earn-days ed-soon' : 'earn-days ed-far';
+        }
+    });
+}
+
+// ─────────────────────────────────────────────────────────
+// AUD/USD (via TradingView widget is enough for header)
+// Try a free API for the header pill
+// ─────────────────────────────────────────────────────────
+async function fetchAUDUSD() {
+    try {
+        const r = await fetch('https://api.frankfurter.app/latest?from=AUD&to=USD');
+        const d = await r.json();
+        if (d.rates && d.rates.USD) {
+            document.getElementById('hdr-audusd').textContent = d.rates.USD.toFixed(4);
+        }
+    } catch(e) {
+        document.getElementById('hdr-audusd').textContent = '—';
+    }
+}
+
+// ─────────────────────────────────────────────────────────
+// NEWS FEED
+// ─────────────────────────────────────────────────────────
+let cachedNews = [];
+let newsFilter = 'all';
+
+const FEEDS = [
+    { url: 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=NVDA,MSFT,AMZN,TSM,ORCL&region=US&lang=en-US', name: 'Yahoo Finance' },
+    { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', name: 'CNBC Markets' },
+    { url: 'https://www.marketwatch.com/rss/topstories', name: 'MarketWatch' },
+    { url: 'https://feeds.reuters.com/reuters/businessNews', name: 'Reuters' }
+];
+const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
+
+const KEYWORDS = {
+    ai:    ['nvidia','gpu','chip','semiconductor','ai ','artificial intelligence','machine learning','openai','robot','broadcom','tsmc','arm','llm','inference','data center'],
+    tech:  ['microsoft','amazon','oracle','google','meta','apple','netflix','cloud','software','saas','nasdaq','tech ','tsm','nvda','msft','amzn','orcl'],
+    macro: ['fed ','federal reserve','rate hike','inflation','gdp','tariff','iran','oil','crude','s&p 500','dow jones','economy','cpi','ppi','payroll','trump','stagflation','recession','treasury']
+};
+
+const BULL_WORDS = ['surge','rally','gain','rise','rose','up ','beat','record','growth','profit','strong','bull','upgrade','buy','above','exceed','positive','boost'];
+const BEAR_WORDS = ['fall','drop','decline','loss','down ','miss','weak','bear','sell','warning','risk','cut','war','crisis','recession','hike','below','tariff','concern'];
+
+function classify(title) {
+    const h = title.toLowerCase();
+    for (const [cat, words] of Object.entries(KEYWORDS)) {
+        if (words.some(w => h.includes(w))) return cat;
+    }
+    return 'other';
+}
+
+function sentiment(title) {
+    const h = title.toLowerCase();
+    const b = BULL_WORDS.filter(w => h.includes(w)).length;
+    const r = BEAR_WORDS.filter(w => h.includes(w)).length;
+    return r > b ? 'bear' : b > r ? 'bull' : 'neu';
+}
+
+function timeAgo(dateStr) {
+    const diff = Math.floor((Date.now() - new Date(dateStr)) / 60000);
+    if (diff < 1) return 'just now';
+    if (diff < 60) return diff + 'm ago';
+    const h = Math.floor(diff / 60);
+    if (h < 24) return h + 'h ago';
+    return Math.floor(h / 24) + 'd ago';
+}
+
+async function fetchFeed(url, name) {
+    try {
+        const res = await fetch(`${RSS2JSON}${encodeURIComponent(url)}&count=20`, { signal: AbortSignal.timeout(8000) });
+        const data = await res.json();
+        if (data.status === 'ok' && data.items) {
+            return data.items.map(item => ({
+                title: item.title,
+                link: item.link,
+                date: item.pubDate,
+                source: name,
+                cat: classify(item.title),
+                sent: sentiment(item.title)
+            }));
+        }
+    } catch(e) { /* timeout or error */ }
+    return [];
+}
+
+const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+
+function isWithin24h(dateStr) {
+    return (Date.now() - new Date(dateStr)) < TWENTY_FOUR_HOURS;
+}
+
+async function fetchNews() {
+    document.getElementById('news-feed').innerHTML = '<div class="news-loading">Fetching latest news…</div>';
+
+    const results = await Promise.allSettled(FEEDS.map(f => fetchFeed(f.url, f.name)));
+    const items = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+
+    // Deduplicate, sort by date, filter to 24h
+    const seen = new Set();
+    const allItems = items
+        .filter(item => {
+            const key = item.title.slice(0, 60).toLowerCase();
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        })
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // Prefer last 24h, fall back to last 48h if very few results
+    const fresh = allItems.filter(i => isWithin24h(i.date));
+    cachedNews = fresh.length >= 5 ? fresh : allItems.slice(0, 30);
+
+    const now = new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+
+    if (cachedNews.length === 0) {
+        // Fallback: TradingView news timeline widget
+        document.getElementById('news-feed').innerHTML = '';
+        const wrap = document.createElement('div');
+        wrap.className = 'tradingview-widget-container';
+        wrap.style.cssText = 'height:100%;width:100%';
+        const inner = document.createElement('div');
+        inner.className = 'tradingview-widget-container__widget';
+        wrap.appendChild(inner);
+        const scr = document.createElement('script');
+        scr.type = 'text/javascript';
+        scr.src = 'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js';
+        scr.async = true;
+        scr.textContent = JSON.stringify({
+            "feedMode": "market", "market": "stock",
+            "isTransparent": true, "displayMode": "compact",
+            "width": "100%", "height": "100%",
+            "colorTheme": "dark", "locale": "en"
+        });
+        wrap.appendChild(scr);
+        document.getElementById('news-feed').appendChild(wrap);
+        populateAlertBar([]);
+        return;
+    }
+
+    renderNews();
+    populateAlertBar(cachedNews);
+    document.getElementById('footer-updated').textContent = 'News updated: ' + now;
+}
+
+function renderNews() {
+    const feed = document.getElementById('news-feed');
+    feed.innerHTML = '';
+
+    const filtered = newsFilter === 'all'
+        ? cachedNews
+        : cachedNews.filter(n => n.cat === newsFilter);
+
+    if (filtered.length === 0) {
+        feed.innerHTML = '<div class="news-loading">No results in last 24h for this filter</div>';
+        return;
+    }
+
+    filtered.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'news-item';
+        div.onclick = () => window.open(item.link, '_blank');
+
+        const sentClass = item.sent === 'bull' ? 'sent-bull' : item.sent === 'bear' ? 'sent-bear' : 'sent-neu';
+        const sentLabel = item.sent === 'bull' ? '▲ Bullish' : item.sent === 'bear' ? '▼ Bearish' : '— Neutral';
+        const isRecent = isWithin24h(item.date);
+
+        div.innerHTML = `
+            <div class="news-headline">${isRecent ? '' : '<span style="color:var(--text-3);font-size:9px">[&gt;24h] </span>'}${item.title}</div>
+            <div class="news-meta">
+                <span class="news-src">${item.source}</span>
+                <span class="news-time">${timeAgo(item.date)}</span>
+                <span class="news-sent ${sentClass}">${sentLabel}</span>
+            </div>
+        `;
+        feed.appendChild(div);
+    });
+}
+
+function populateAlertBar(items) {
+    const el = document.getElementById('alert-scroll-text');
+    const ts = document.getElementById('alert-timestamp');
+
+    // Only use headlines from last 24h for the ticker
+    const recent = items.filter(i => isWithin24h(i.date)).slice(0, 20);
+
+    if (recent.length === 0) {
+        el.textContent = 'No headlines in last 24 hours — check news feed';
+        ts.textContent = '';
+        return;
+    }
+
+    // Build scrolling text: sentiment icon + headline, doubled for seamless loop
+    const parts = recent.map(i => {
+        const icon = i.sent === 'bull' ? '🟢' : i.sent === 'bear' ? '🔴' : '🟡';
+        return `${icon} ${i.title} [${i.source}]`;
+    });
+
+    const single = parts.join(' &nbsp;&nbsp;&nbsp; ');
+    el.innerHTML = single + ' &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' + single;
+
+    const count = recent.length;
+    const oldest = recent[recent.length - 1];
+    ts.textContent = `${count} headlines · latest ${timeAgo(recent[0].date)}`;
+
+    // Recalculate animation duration based on content length
+    const charCount = parts.join(' ').length;
+    const duration = Math.max(20, charCount * 0.12);
+    el.style.animationDuration = duration + 's';
+}
+
+function setFilter(cat, btn) {
+    newsFilter = cat;
+    document.querySelectorAll('.right-filter-bar .btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (cachedNews.length > 0) renderNews();
+}
+
+// ─────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    buildWatchlist();
+    buildChartButtons();
+
+    // Default chart = TSM (active trade)
+    const tsmBtn = document.querySelector('[data-sym="NYSE:TSM"]');
+    if (tsmBtn) tsmBtn.classList.add('active');
+    initChart('NYSE:TSM');
+
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    updateEarnings();
+    setInterval(updateEarnings, 60 * 1000);
+
+    fetchAUDUSD();
+    setInterval(fetchAUDUSD, 5 * 60 * 1000);
+
+    fetchNews();
+    setInterval(fetchNews, 5 * 60 * 1000);
+
+    // Build new picks on load
+    buildNewPicks();
+
+    // Default analysis tab for TSM
+    renderAnalysis('NYSE:TSM');
+    showTab('analysis');
+
+    // Chat welcome
+    loadProxyUrl();
+    appendChatMsg('bot', 'G\'day! I\'m your AI trading analyst. Ask me about any stock on your watchlist, trade setups, risk management — or type <strong>/add TICKER</strong> to add a stock. Hit ⚙ to configure your API proxy.');
+});
+
+// ─────────────────────────────────────────────────────────
+// CHAT PANEL
+// ─────────────────────────────────────────────────────────
+let chatOpen = false;
+let proxyUrl = '';
+
+function loadProxyUrl() {
+    proxyUrl = localStorage.getItem('proxy_url') || '';
+}
+
+function toggleChat() {
+    chatOpen = !chatOpen;
+    document.getElementById('chat-panel').classList.toggle('open', chatOpen);
+}
+
+const SYSTEM_PROMPT = `You are an expert short-term trading analyst for an Australian investor (Brisbane, AEST timezone). They use Stake (long-only, cash account, no margin, no shorting — IBKR for shorts). Strategy: 1 day to 3 months hold period.
+
+Current watchlist: NVDA, MSFT, AMZN, TSM, ORCL. They have NOT bought any of these yet.
+
+Your job:
+- Give direct BUY NOW / BUY WHEN / DO NOT BUY signals
+- Specify exact entry price, stop loss, target price, and hold period
+- Focus on short-term catalysts: earnings runs, technical breakouts, momentum
+- All prices in USD. Mention AUD impact if relevant.
+- Pre-earnings strategy: buy 2-3 weeks before report, sell the day BEFORE earnings
+- Be concise, direct, and actionable. No disclaimers about "not financial advice".
+
+If the user asks to add or remove a stock, respond normally AND include a command block:
+<command>{"action":"add","sym":"TICKER","tv":"EXCHANGE:TICKER","name":"Company Name"}</command>
+<command>{"action":"remove","sym":"TICKER"}</command>`;
+
+async function sendChatMessage() {
+    const input = document.getElementById('chat-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    input.value = '';
+    appendChatMsg('user', msg);
+
+    // Check for local /add command
+    const addMatch = msg.match(/^\/add\s+(\w+)/i);
+    if (addMatch) {
+        const sym = addMatch[1].toUpperCase();
+        appendChatMsg('bot', `Looking up <strong>${sym}</strong>... Use the settings (⚙) to configure your Claude API proxy for full AI analysis. For now I'll add it to your watchlist.`);
+        addToWatchlist(sym, guessExchange(sym) + ':' + sym, sym);
+        return;
+    }
+
+    if (!proxyUrl) {
+        appendChatMsg('bot', 'You need to set your Claude API proxy URL first. Click the ⚙ button above to configure it. See <strong>cloudflare-worker.js</strong> for the free 5-minute setup.');
+        return;
+    }
+
+    // Show typing indicator
+    const typing = document.createElement('div');
+    typing.className = 'chat-typing';
+    typing.id = 'chat-typing';
+    typing.innerHTML = '<span>●</span><span>●</span><span>●</span> Analysing...';
+    document.getElementById('chat-messages').appendChild(typing);
+    scrollChat();
+
+    const sendBtn = document.getElementById('chat-send');
+    sendBtn.disabled = true;
+
+    try {
+        const res = await fetch(proxyUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 1024,
+                system: SYSTEM_PROMPT,
+                messages: [{ role: 'user', content: msg }]
+            })
+        });
+
+        const data = await res.json();
+        const reply = data.content?.[0]?.text || data.error?.message || 'No response received.';
+
+        document.getElementById('chat-typing')?.remove();
+        processCommand(reply);
+        appendChatMsg('bot', formatChatResponse(reply));
+
+    } catch (err) {
+        document.getElementById('chat-typing')?.remove();
+        appendChatMsg('bot', `<strong style="color:var(--red)">Error:</strong> ${err.message}. Check your proxy URL in settings.`);
+    }
+
+    sendBtn.disabled = false;
+}
+
+function appendChatMsg(role, html) {
+    const div = document.createElement('div');
+    div.className = role === 'user' ? 'chat-msg chat-msg-user' : 'chat-msg chat-msg-bot';
+    if (role === 'bot') {
+        div.innerHTML = '<span class="bot-tag">AI Analyst</span>' + html;
+    } else {
+        div.innerHTML = html;
+    }
+    document.getElementById('chat-messages').appendChild(div);
+    scrollChat();
+}
+
+function scrollChat() {
+    const el = document.getElementById('chat-messages');
+    el.scrollTop = el.scrollHeight;
+}
+
+function processCommand(text) {
+    const regex = /<command>(.*?)<\/command>/gs;
+    let m;
+    while ((m = regex.exec(text)) !== null) {
+        try {
+            const cmd = JSON.parse(m[1]);
+            if (cmd.action === 'add') {
+                addToWatchlist(cmd.sym, cmd.tv, cmd.name || cmd.sym);
+            } else if (cmd.action === 'remove') {
+                removeFromWatchlist(cmd.sym);
+            }
+        } catch(e) { /* ignore parse errors */ }
+    }
+}
+
+function formatChatResponse(text) {
+    // Strip command blocks from display
+    let s = text.replace(/<command>.*?<\/command>/gs, '');
+    // Bold
+    s = s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Line breaks
+    s = s.replace(/\n/g, '<br>');
+    return s.trim();
+}
+
+function guessExchange(sym) {
+    const nyse = ['TSM','ORCL','ARM','V','JPM','BAC','WMT','DIS','IBM','GS','BA','PLTR','SNOW','NET','UBER','SHOP','CRM'];
+    return nyse.includes(sym) ? 'NYSE' : 'NASDAQ';
+}
+
+// ─────────────────────────────────────────────────────────
+// SIDEBAR COLLAPSE
+// ─────────────────────────────────────────────────────────
+function toggleSidebar(side) {
+    const main = document.getElementById('main');
+    const cls = side + '-collapsed';
+    main.classList.toggle(cls);
+
+    const btn = document.getElementById('toggle-' + side);
+    const collapsed = main.classList.contains(cls);
+    btn.textContent = side === 'left'
+        ? (collapsed ? '▶' : '◀')
+        : (collapsed ? '◀' : '▶');
+
+    // Re-render chart after transition so TradingView resizes
+    setTimeout(() => { if (currentSym) initChart(currentSym); }, 350);
+}
+
+// ─────────────────────────────────────────────────────────
+// TICKER SEARCH
+// ─────────────────────────────────────────────────────────
+const ALL_TICKERS = [
+    { sym: 'NVDA', tv: 'NASDAQ:NVDA', name: 'NVIDIA', exchange: 'NASDAQ' },
+    { sym: 'MSFT', tv: 'NASDAQ:MSFT', name: 'Microsoft', exchange: 'NASDAQ' },
+    { sym: 'AMZN', tv: 'NASDAQ:AMZN', name: 'Amazon', exchange: 'NASDAQ' },
+    { sym: 'TSM',  tv: 'NYSE:TSM',    name: 'Taiwan Semiconductor', exchange: 'NYSE' },
+    { sym: 'ORCL', tv: 'NYSE:ORCL',   name: 'Oracle', exchange: 'NYSE' },
+    { sym: 'AAPL', tv: 'NASDAQ:AAPL', name: 'Apple', exchange: 'NASDAQ' },
+    { sym: 'GOOGL',tv: 'NASDAQ:GOOGL',name: 'Alphabet', exchange: 'NASDAQ' },
+    { sym: 'META', tv: 'NASDAQ:META', name: 'Meta Platforms', exchange: 'NASDAQ' },
+    { sym: 'PLTR', tv: 'NYSE:PLTR',   name: 'Palantir', exchange: 'NYSE' },
+    { sym: 'AVGO', tv: 'NASDAQ:AVGO', name: 'Broadcom', exchange: 'NASDAQ' },
+    { sym: 'AMD',  tv: 'NASDAQ:AMD',  name: 'AMD', exchange: 'NASDAQ' },
+    { sym: 'ARM',  tv: 'NASDAQ:ARM',  name: 'Arm Holdings', exchange: 'NASDAQ' },
+    { sym: 'CRWD', tv: 'NASDAQ:CRWD', name: 'CrowdStrike', exchange: 'NASDAQ' },
+    { sym: 'SNOW', tv: 'NYSE:SNOW',   name: 'Snowflake', exchange: 'NYSE' },
+    { sym: 'NET',  tv: 'NYSE:NET',    name: 'Cloudflare', exchange: 'NYSE' },
+    { sym: 'UBER', tv: 'NYSE:UBER',   name: 'Uber', exchange: 'NYSE' },
+    { sym: 'SHOP', tv: 'NYSE:SHOP',   name: 'Shopify', exchange: 'NYSE' },
+    { sym: 'COIN', tv: 'NASDAQ:COIN', name: 'Coinbase', exchange: 'NASDAQ' },
+    { sym: 'MRVL', tv: 'NASDAQ:MRVL', name: 'Marvell Tech', exchange: 'NASDAQ' },
+    { sym: 'MU',   tv: 'NASDAQ:MU',   name: 'Micron', exchange: 'NASDAQ' },
+    { sym: 'NFLX', tv: 'NASDAQ:NFLX', name: 'Netflix', exchange: 'NASDAQ' },
+    { sym: 'CRM',  tv: 'NYSE:CRM',    name: 'Salesforce', exchange: 'NYSE' },
+    { sym: 'ADBE', tv: 'NASDAQ:ADBE', name: 'Adobe', exchange: 'NASDAQ' },
+    { sym: 'INTC', tv: 'NASDAQ:INTC', name: 'Intel', exchange: 'NASDAQ' },
+    { sym: 'QCOM', tv: 'NASDAQ:QCOM', name: 'Qualcomm', exchange: 'NASDAQ' },
+    { sym: 'TSLA', tv: 'NASDAQ:TSLA', name: 'Tesla', exchange: 'NASDAQ' },
+    { sym: 'NXPI', tv: 'NASDAQ:NXPI', name: 'NXP Semi', exchange: 'NASDAQ' },
+    { sym: 'ISRG', tv: 'NASDAQ:ISRG', name: 'Intuitive Surgical', exchange: 'NASDAQ' },
+    { sym: 'SPY',  tv: 'AMEX:SPY',    name: 'S&P 500 ETF', exchange: 'AMEX' },
+    { sym: 'QQQ',  tv: 'NASDAQ:QQQ',  name: 'Nasdaq 100 ETF', exchange: 'NASDAQ' },
+    { sym: 'IVV',  tv: 'AMEX:IVV',    name: 'iShares S&P 500', exchange: 'AMEX' },
+    { sym: 'BOTZ', tv: 'AMEX:BOTZ',   name: 'Robotics & AI ETF', exchange: 'AMEX' },
+    { sym: 'SMH',  tv: 'AMEX:SMH',    name: 'Semiconductor ETF', exchange: 'AMEX' },
+    { sym: 'SOXX', tv: 'NASDAQ:SOXX', name: 'iShares Semi ETF', exchange: 'NASDAQ' },
+    { sym: 'V',    tv: 'NYSE:V',      name: 'Visa', exchange: 'NYSE' },
+    { sym: 'JPM',  tv: 'NYSE:JPM',    name: 'JPMorgan Chase', exchange: 'NYSE' },
+    { sym: 'WMT',  tv: 'NYSE:WMT',    name: 'Walmart', exchange: 'NYSE' },
+    { sym: 'DIS',  tv: 'NYSE:DIS',    name: 'Walt Disney', exchange: 'NYSE' },
+    { sym: 'BA',   tv: 'NYSE:BA',     name: 'Boeing', exchange: 'NYSE' },
+    { sym: 'GS',   tv: 'NYSE:GS',     name: 'Goldman Sachs', exchange: 'NYSE' },
+    { sym: 'DE',   tv: 'NYSE:DE',     name: 'Deere & Co', exchange: 'NYSE' },
+    { sym: 'SQ',   tv: 'NYSE:SQ',     name: 'Block (Square)', exchange: 'NYSE' },
+    { sym: 'ROKU', tv: 'NASDAQ:ROKU', name: 'Roku', exchange: 'NASDAQ' },
+    { sym: 'DDOG', tv: 'NASDAQ:DDOG', name: 'Datadog', exchange: 'NASDAQ' },
+    { sym: 'ZS',   tv: 'NASDAQ:ZS',   name: 'Zscaler', exchange: 'NASDAQ' },
+    { sym: 'PANW', tv: 'NASDAQ:PANW', name: 'Palo Alto Networks', exchange: 'NASDAQ' },
+    { sym: 'NOW',  tv: 'NYSE:NOW',    name: 'ServiceNow', exchange: 'NYSE' },
+    { sym: 'ABNB', tv: 'NASDAQ:ABNB', name: 'Airbnb', exchange: 'NASDAQ' },
+];
+
+let tickerSearchIdx = -1;
+
+function searchTickers(query) {
+    const box = document.getElementById('ticker-results');
+    const q = query.trim().toUpperCase();
+    tickerSearchIdx = -1;
+
+    if (!q) { box.classList.remove('open'); return; }
+
+    const matches = ALL_TICKERS.filter(t =>
+        t.sym.includes(q) || t.name.toUpperCase().includes(q)
+    ).slice(0, 12);
+
+    if (matches.length === 0) {
+        // Allow arbitrary ticker entry
+        box.innerHTML = `
+            <div class="ticker-result-item" onclick="chartTicker('${q}','${guessExchange(q)}:${q}')">
+                <span class="tr-sym">${q}</span>
+                <span class="tr-name">Open chart for ${q}</span>
+                <span class="tr-exchange">Enter ↵</span>
+            </div>
+            <div class="ticker-result-empty">Not in list — will attempt to chart anyway</div>`;
+        box.classList.add('open');
+        return;
+    }
+
+    box.innerHTML = matches.map((t, i) => {
+        const onWl = WATCHLIST.find(w => w.sym === t.sym);
+        return `<div class="ticker-result-item${i === 0 ? ' tr-active' : ''}" data-idx="${i}"
+                     onclick="chartTicker('${t.sym}','${t.tv}')">
+            <span class="tr-sym">${t.sym}</span>
+            <span class="tr-name">${t.name}</span>
+            <span class="tr-exchange">${t.exchange}</span>
+            ${onWl
+                ? '<span class="tr-on-wl">On watchlist</span>'
+                : `<span class="tr-add-wl" onclick="event.stopPropagation();addFromSearch('${t.sym}','${t.tv}','${t.name}',this)">+ Add</span>`
+            }
+        </div>`;
+    }).join('');
+    box.classList.add('open');
+}
+
+function handleTickerSearchKey(e) {
+    const box = document.getElementById('ticker-results');
+    const items = box.querySelectorAll('.ticker-result-item');
+    if (!items.length) return;
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        tickerSearchIdx = Math.min(tickerSearchIdx + 1, items.length - 1);
+        items.forEach((el, i) => el.classList.toggle('tr-active', i === tickerSearchIdx));
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        tickerSearchIdx = Math.max(tickerSearchIdx - 1, 0);
+        items.forEach((el, i) => el.classList.toggle('tr-active', i === tickerSearchIdx));
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const active = tickerSearchIdx >= 0 ? items[tickerSearchIdx] : items[0];
+        if (active) active.click();
+    } else if (e.key === 'Escape') {
+        box.classList.remove('open');
+        document.getElementById('ticker-search').blur();
+    }
+}
+
+function chartTicker(sym, tvSym) {
+    document.getElementById('ticker-results').classList.remove('open');
+    document.getElementById('ticker-search').value = '';
+
+    // Highlight chart button if it exists
+    document.querySelectorAll('#chart-btns .btn').forEach(b => {
+        b.classList.remove('active');
+        if (b.dataset.sym === tvSym) b.classList.add('active');
+    });
+
+    initChart(tvSym);
+    if (INSIGHTS[tvSym]) {
+        renderAnalysis(tvSym);
+        showTab('analysis');
+    }
+
+    // Highlight watchlist card if present
+    document.querySelectorAll('.wl-card').forEach(c => {
+        const isCurrent = c.dataset.sym === tvSym;
+        c.classList.toggle('wl-selected', isCurrent);
+        if (isCurrent) c.style.borderColor = 'var(--blue)';
+        else {
+            const w = WATCHLIST.find(w => w.sym === c.dataset.ticker);
+            c.style.borderColor = STATUS_COLORS[w?.status] || 'var(--border)';
+        }
+    });
+}
+
+function addFromSearch(sym, tv, name, el) {
+    addToWatchlist(sym, tv, name);
+    // Update the button to show "On watchlist"
+    el.outerHTML = '<span class="tr-on-wl">On watchlist</span>';
+}
+
+// Close ticker search when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.ticker-search-wrap')) {
+        document.getElementById('ticker-results').classList.remove('open');
+    }
+});
+
+// ─────────────────────────────────────────────────────────
+// DYNAMIC WATCHLIST (localStorage)
+// ─────────────────────────────────────────────────────────
+function saveWatchlistToStorage() {
+    localStorage.setItem('custom_watchlist', JSON.stringify(
+        WATCHLIST.map(w => ({ sym: w.sym, tv: w.tv, name: w.name }))
+    ));
+}
+
+function addToWatchlist(sym, tvSym, name) {
+    if (WATCHLIST.find(w => w.sym === sym)) {
+        try { appendChatMsg('bot', `<strong>${sym}</strong> is already on your watchlist.`); } catch(e) {}
+        return;
+    }
+    WATCHLIST.push({
+        sym, tv: tvSym, name: name || sym,
+        refPrice: null, target: '—', entry: '—', stop: '—',
+        upside: '—', confidence: null, status: 'watch', label: 'WATCHING',
+        theme: 'New', note: 'Click to chart'
+    });
+    saveWatchlistToStorage();
+    rebuildWatchlist();
+    try { appendChatMsg('bot', `Added <strong>${sym}</strong> to your watchlist.`); } catch(e) {}
+}
+
+function removeFromWatchlist(sym) {
+    const idx = WATCHLIST.findIndex(w => w.sym === sym);
+    if (idx === -1) return;
+    WATCHLIST.splice(idx, 1);
+    saveWatchlistToStorage();
+    rebuildWatchlist();
+}
+
+function rebuildWatchlist() {
+    const grid = document.getElementById('wl-grid');
+    grid.innerHTML = '';
+    buildWatchlist();
+    buildChartButtons();
+}
+
+const EXTRA_CHART_SYMS = [
+    { sym: 'CRWD', tv: 'NASDAQ:CRWD' },
+    { sym: 'TSLA', tv: 'NASDAQ:TSLA' },
+    { sym: 'NXPI', tv: 'NASDAQ:NXPI' },
+    { sym: 'IVV',  tv: 'AMEX:IVV' },
+    { sym: 'SPY',  tv: 'AMEX:SPY' },
+    { sym: 'QQQ',  tv: 'NASDAQ:QQQ' },
+    { sym: 'BOTZ', tv: 'AMEX:BOTZ' },
+    { sym: 'GOLD', tv: 'TVC:GOLD' },
+];
+
+function buildChartButtons() {
+    const bar = document.getElementById('chart-btns');
+    bar.innerHTML = '';
+
+    // Watchlist tickers first
+    const added = new Set();
+    WATCHLIST.forEach(s => {
+        added.add(s.tv);
+        const btn = document.createElement('button');
+        btn.className = 'btn' + (s.tv === currentSym ? ' active' : '');
+        btn.dataset.sym = s.tv;
+        btn.textContent = s.sym;
+        btn.onclick = () => switchChart(btn);
+        bar.appendChild(btn);
+    });
+
+    // Then extras not already on watchlist
+    EXTRA_CHART_SYMS.forEach(e => {
+        if (added.has(e.tv)) return;
+        const btn = document.createElement('button');
+        btn.className = 'btn' + (e.tv === currentSym ? ' active' : '');
+        btn.dataset.sym = e.tv;
+        btn.textContent = e.sym;
+        btn.style.opacity = '0.6';
+        btn.onclick = () => switchChart(btn);
+        bar.appendChild(btn);
+    });
+}
+
+// ─────────────────────────────────────────────────────────
+// SETTINGS MODAL
+// ─────────────────────────────────────────────────────────
+function openSettings() {
+    document.getElementById('settings-modal').classList.add('open');
+    document.getElementById('set-proxy-url').value = proxyUrl;
+}
+
+function closeSettings() {
+    document.getElementById('settings-modal').classList.remove('open');
+}
+
+function saveSettings() {
+    proxyUrl = document.getElementById('set-proxy-url').value.trim();
+    localStorage.setItem('proxy_url', proxyUrl);
+    closeSettings();
+    appendChatMsg('bot', proxyUrl ? 'Proxy URL saved. You\'re all set — ask me anything!' : 'Proxy URL cleared. Chat will work in offline mode only.');
+}
+
+// ─────────────────────────────────────────────────────────
+// ADD STOCK MODAL
+// ─────────────────────────────────────────────────────────
+const STOCK_SUGGESTIONS = [
+    { sym: 'AAPL', tv: 'NASDAQ:AAPL', name: 'Apple' },
+    { sym: 'GOOGL', tv: 'NASDAQ:GOOGL', name: 'Alphabet' },
+    { sym: 'META', tv: 'NASDAQ:META', name: 'Meta Platforms' },
+    { sym: 'PLTR', tv: 'NYSE:PLTR', name: 'Palantir' },
+    { sym: 'AVGO', tv: 'NASDAQ:AVGO', name: 'Broadcom' },
+    { sym: 'AMD', tv: 'NASDAQ:AMD', name: 'AMD' },
+    { sym: 'ARM', tv: 'NASDAQ:ARM', name: 'Arm Holdings' },
+    { sym: 'CRWD', tv: 'NASDAQ:CRWD', name: 'CrowdStrike' },
+    { sym: 'SNOW', tv: 'NYSE:SNOW', name: 'Snowflake' },
+    { sym: 'NET', tv: 'NYSE:NET', name: 'Cloudflare' },
+    { sym: 'UBER', tv: 'NYSE:UBER', name: 'Uber' },
+    { sym: 'SHOP', tv: 'NYSE:SHOP', name: 'Shopify' },
+    { sym: 'COIN', tv: 'NASDAQ:COIN', name: 'Coinbase' },
+    { sym: 'MRVL', tv: 'NASDAQ:MRVL', name: 'Marvell Tech' },
+    { sym: 'MU', tv: 'NASDAQ:MU', name: 'Micron' },
+    { sym: 'NFLX', tv: 'NASDAQ:NFLX', name: 'Netflix' },
+    { sym: 'CRM', tv: 'NYSE:CRM', name: 'Salesforce' },
+    { sym: 'ADBE', tv: 'NASDAQ:ADBE', name: 'Adobe' },
+    { sym: 'INTC', tv: 'NASDAQ:INTC', name: 'Intel' },
+    { sym: 'QCOM', tv: 'NASDAQ:QCOM', name: 'Qualcomm' },
+];
+
+function openAddStock() {
+    document.getElementById('add-stock-modal').classList.add('open');
+    document.getElementById('add-stock-search').value = '';
+    filterSuggestions('');
+    setTimeout(() => document.getElementById('add-stock-search').focus(), 100);
+}
+
+function closeAddStock() {
+    document.getElementById('add-stock-modal').classList.remove('open');
+}
+
+function filterSuggestions(query) {
+    const q = query.toUpperCase();
+    const box = document.getElementById('stock-suggestions');
+    const matches = q
+        ? STOCK_SUGGESTIONS.filter(s => s.sym.includes(q) || s.name.toUpperCase().includes(q))
+        : STOCK_SUGGESTIONS.slice(0, 10);
+
+    box.innerHTML = matches.map(s => `
+        <div class="stock-sug-item" onclick="selectSuggestion('${s.sym}','${s.tv}','${s.name}')">
+            <span class="sug-sym">${s.sym}</span>
+            <span class="sug-name">${s.name}</span>
+        </div>
+    `).join('');
+}
+
+function selectSuggestion(sym, tv, name) {
+    addToWatchlist(sym, tv, name);
+    closeAddStock();
+}
+
+function addCustomStock() {
+    const val = document.getElementById('add-stock-search').value.trim().toUpperCase();
+    if (!val) return;
+    const known = STOCK_SUGGESTIONS.find(s => s.sym === val);
+    if (known) {
+        addToWatchlist(known.sym, known.tv, known.name);
+    } else {
+        addToWatchlist(val, guessExchange(val) + ':' + val, val);
+    }
+    closeAddStock();
+}
+
+</script>
+
+<!-- ══════════════════════════════════════════════════
+     CHAT BUTTON + PANEL
+══════════════════════════════════════════════════ -->
+<button id="chat-btn" onclick="toggleChat()">
+    <div class="chat-notif"></div>
+    AI Analyst
+</button>
+
+<div id="chat-panel">
+    <div id="chat-header">
+        <div class="ch-avatar">🤖</div>
+        <div>
+            <div class="ch-title">Trading Analyst</div>
+            <div class="ch-sub">Claude · Short-term signals</div>
+        </div>
+        <div class="ch-actions">
+            <button onclick="openAddStock()" title="Add stock">+ Stock</button>
+            <button onclick="openSettings()" title="Settings">⚙</button>
+            <button onclick="toggleChat()" title="Close">✕</button>
+        </div>
+    </div>
+    <div id="chat-messages"></div>
+    <div id="chat-input-row">
+        <input id="chat-input" type="text" placeholder="Ask about any stock…"
+               onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage()}">
+        <button id="chat-send" onclick="sendChatMessage()">→</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SETTINGS MODAL
+══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
+    <div class="modal-box">
+        <div class="modal-title">⚙ Settings</div>
+        <div class="modal-field">
+            <label>Claude API Proxy URL</label>
+            <input id="set-proxy-url" type="text" placeholder="https://your-worker.workers.dev">
+            <div class="modal-hint">
+                Deploy <strong>cloudflare-worker.js</strong> to Cloudflare Workers (free, ~5 min).<br>
+                Set your ANTHROPIC_API_KEY as a secret, then paste the worker URL here.
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeSettings()">Cancel</button>
+            <button class="btn-save" onclick="saveSettings()">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     ADD STOCK MODAL
+══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="add-stock-modal" onclick="if(event.target===this)closeAddStock()">
+    <div class="modal-box">
+        <div class="modal-title">+ Add Stock to Watchlist</div>
+        <div class="modal-field">
+            <label>Search ticker or company name</label>
+            <input id="add-stock-search" type="text" placeholder="e.g. PLTR, Palantir"
+                   oninput="filterSuggestions(this.value)"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomStock()}">
+        </div>
+        <div id="stock-suggestions"></div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeAddStock()">Cancel</button>
+            <button class="btn-save" onclick="addCustomStock()">Add</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
