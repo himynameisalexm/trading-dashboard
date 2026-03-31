@@ -779,6 +779,59 @@
         }
         .wl-card:hover .wl-card-remove { opacity: 1; pointer-events: all; }
         .wl-card { position: relative; }
+
+        /* ── Inline Add Ticker Search ──────────────────── */
+        .wl-add-wrap {
+            position: relative; margin-bottom: 10px;
+        }
+        .wl-add-input-row {
+            display: flex; align-items: center;
+            background: var(--bg-3); border: 1px solid var(--border);
+            border-radius: 8px; overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .wl-add-input-row:focus-within { border-color: var(--blue); }
+        .wl-add-icon {
+            padding: 0 10px; color: var(--blue); font-size: 16px; font-weight: 700;
+            flex-shrink: 0; user-select: none;
+        }
+        #wl-add-input {
+            flex: 1; background: transparent; border: none; color: var(--text-1);
+            padding: 9px 12px 9px 0; font-size: 12px; outline: none;
+            font-family: var(--font-sans);
+        }
+        #wl-add-input::placeholder { color: var(--text-3); }
+        #wl-add-results {
+            position: absolute; top: 100%; left: 0; right: 0; margin-top: 3px;
+            background: var(--bg-2); border: 1px solid var(--border);
+            border-radius: 8px; z-index: 80; display: none;
+            max-height: 260px; overflow-y: auto;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        }
+        #wl-add-results.open { display: block; }
+        #wl-add-results::-webkit-scrollbar { width: 4px; }
+        #wl-add-results::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .wl-sug-item {
+            padding: 9px 14px; cursor: pointer; font-size: 12px;
+            display: flex; align-items: center; gap: 10px;
+            border-bottom: 1px solid var(--border-light);
+            transition: background 0.1s;
+        }
+        .wl-sug-item:last-child { border-bottom: none; }
+        .wl-sug-item:hover, .wl-sug-item.wl-sug-active { background: var(--blue-dim); }
+        .wl-sug-sym {
+            font-weight: 700; color: var(--blue); min-width: 50px;
+            font-family: var(--font-mono); font-size: 12px;
+        }
+        .wl-sug-name { color: var(--text-2); font-size: 11px; flex: 1; }
+        .wl-sug-exchange { color: var(--text-3); font-size: 9px; }
+        .wl-sug-on-wl {
+            font-size: 8px; background: var(--green-dim); color: var(--green);
+            padding: 2px 6px; border-radius: 3px; font-weight: 600;
+        }
+        .wl-sug-empty {
+            padding: 16px; text-align: center; font-size: 11px; color: var(--text-3);
+        }
     </style>
 </head>
 <body>
@@ -1151,8 +1204,18 @@
                 <span>Watchlist</span>
                 <div style="display:flex;gap:6px;align-items:center">
                     <span style="font-size:9px;color:var(--text-3)">Click to chart</span>
-                    <button class="btn-xs" onclick="openAddStock()" style="font-size:10px">+ Add Ticker</button>
                 </div>
+            </div>
+            <div class="wl-add-wrap" id="wl-add-wrap">
+                <div class="wl-add-input-row">
+                    <span class="wl-add-icon">+</span>
+                    <input id="wl-add-input" type="text" placeholder="Add ticker… e.g. PLTR, Meta, ARM"
+                           oninput="wlAddSearch(this.value)"
+                           onfocus="wlAddSearch(this.value)"
+                           onkeydown="wlAddSearchKey(event)"
+                           autocomplete="off" spellcheck="false">
+                </div>
+                <div id="wl-add-results"></div>
             </div>
             <div class="watchlist-grid" id="wl-grid"></div>
         </div>
@@ -3122,47 +3185,95 @@ const STOCK_SUGGESTIONS = [
     { sym: 'QCOM', tv: 'NASDAQ:QCOM', name: 'Qualcomm' },
 ];
 
+// ─────────────────────────────────────────────────────────
+// INLINE ADD-TICKER SEARCH (watchlist area)
+// ─────────────────────────────────────────────────────────
+let wlAddIdx = -1;
+
+function wlAddSearch(query) {
+    const box = document.getElementById('wl-add-results');
+    const q = query.trim().toUpperCase();
+    wlAddIdx = -1;
+
+    if (!q) { box.classList.remove('open'); return; }
+
+    // Search ALL_TICKERS + STOCK_SUGGESTIONS combined (deduplicated)
+    const pool = new Map();
+    ALL_TICKERS.forEach(t => pool.set(t.sym, t));
+    STOCK_SUGGESTIONS.forEach(s => { if (!pool.has(s.sym)) pool.set(s.sym, { sym: s.sym, tv: s.tv, name: s.name, exchange: s.tv.split(':')[0] }); });
+
+    const matches = [...pool.values()].filter(t =>
+        t.sym.includes(q) || t.name.toUpperCase().includes(q)
+    ).slice(0, 10);
+
+    if (matches.length === 0) {
+        box.innerHTML = `
+            <div class="wl-sug-item" onclick="wlAddSelect('${q}','${guessExchange(q)}:${q}','${q}')">
+                <span class="wl-sug-sym">${q}</span>
+                <span class="wl-sug-name">Add "${q}" to watchlist</span>
+                <span class="wl-sug-exchange">Enter ↵</span>
+            </div>
+            <div class="wl-sug-empty">Not in database — will add as custom ticker</div>`;
+        box.classList.add('open');
+        return;
+    }
+
+    box.innerHTML = matches.map((t, i) => {
+        const onWl = WATCHLIST.find(w => w.sym === t.sym);
+        return `<div class="wl-sug-item${i === 0 ? ' wl-sug-active' : ''}" data-idx="${i}"
+                     onclick="wlAddSelect('${t.sym}','${t.tv}','${t.name.replace(/'/g, "\\'")}')">
+            <span class="wl-sug-sym">${t.sym}</span>
+            <span class="wl-sug-name">${t.name}</span>
+            <span class="wl-sug-exchange">${t.exchange || t.tv.split(':')[0]}</span>
+            ${onWl ? '<span class="wl-sug-on-wl">On watchlist</span>' : ''}
+        </div>`;
+    }).join('');
+    box.classList.add('open');
+}
+
+function wlAddSearchKey(e) {
+    const box = document.getElementById('wl-add-results');
+    const items = box.querySelectorAll('.wl-sug-item');
+    if (!items.length && e.key !== 'Escape') return;
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        wlAddIdx = Math.min(wlAddIdx + 1, items.length - 1);
+        items.forEach((el, i) => el.classList.toggle('wl-sug-active', i === wlAddIdx));
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        wlAddIdx = Math.max(wlAddIdx - 1, 0);
+        items.forEach((el, i) => el.classList.toggle('wl-sug-active', i === wlAddIdx));
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const active = wlAddIdx >= 0 ? items[wlAddIdx] : items[0];
+        if (active) active.click();
+    } else if (e.key === 'Escape') {
+        box.classList.remove('open');
+        document.getElementById('wl-add-input').blur();
+    }
+}
+
+function wlAddSelect(sym, tv, name) {
+    document.getElementById('wl-add-results').classList.remove('open');
+    document.getElementById('wl-add-input').value = '';
+    addToWatchlist(sym, tv, name);
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.wl-add-wrap')) {
+        document.getElementById('wl-add-results').classList.remove('open');
+    }
+});
+
+// Keep legacy modal functions (used by chat + Stock button in chat header)
 function openAddStock() {
-    document.getElementById('add-stock-modal').classList.add('open');
-    document.getElementById('add-stock-search').value = '';
-    filterSuggestions('');
-    setTimeout(() => document.getElementById('add-stock-search').focus(), 100);
+    document.getElementById('wl-add-input').focus();
 }
 
 function closeAddStock() {
-    document.getElementById('add-stock-modal').classList.remove('open');
-}
-
-function filterSuggestions(query) {
-    const q = query.toUpperCase();
-    const box = document.getElementById('stock-suggestions');
-    const matches = q
-        ? STOCK_SUGGESTIONS.filter(s => s.sym.includes(q) || s.name.toUpperCase().includes(q))
-        : STOCK_SUGGESTIONS.slice(0, 10);
-
-    box.innerHTML = matches.map(s => `
-        <div class="stock-sug-item" onclick="selectSuggestion('${s.sym}','${s.tv}','${s.name}')">
-            <span class="sug-sym">${s.sym}</span>
-            <span class="sug-name">${s.name}</span>
-        </div>
-    `).join('');
-}
-
-function selectSuggestion(sym, tv, name) {
-    addToWatchlist(sym, tv, name);
-    closeAddStock();
-}
-
-function addCustomStock() {
-    const val = document.getElementById('add-stock-search').value.trim().toUpperCase();
-    if (!val) return;
-    const known = STOCK_SUGGESTIONS.find(s => s.sym === val);
-    if (known) {
-        addToWatchlist(known.sym, known.tv, known.name);
-    } else {
-        addToWatchlist(val, guessExchange(val) + ':' + val, val);
-    }
-    closeAddStock();
+    document.getElementById('wl-add-results').classList.remove('open');
 }
 
 </script>
@@ -3217,25 +3328,6 @@ function addCustomStock() {
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════
-     ADD STOCK MODAL
-══════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="add-stock-modal" onclick="if(event.target===this)closeAddStock()">
-    <div class="modal-box">
-        <div class="modal-title">+ Add Stock to Watchlist</div>
-        <div class="modal-field">
-            <label>Search ticker or company name</label>
-            <input id="add-stock-search" type="text" placeholder="e.g. PLTR, Palantir"
-                   oninput="filterSuggestions(this.value)"
-                   onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomStock()}">
-        </div>
-        <div id="stock-suggestions"></div>
-        <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeAddStock()">Cancel</button>
-            <button class="btn-save" onclick="addCustomStock()">Add</button>
-        </div>
-    </div>
-</div>
 
 </body>
 </html>
