@@ -120,6 +120,54 @@
         }
         @keyframes scroll-ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
 
+        /* ─── THESIS BANNER ─── */
+        #thesis-bar {
+            flex-shrink: 0;
+            background: linear-gradient(90deg, rgba(88,166,255,0.06), rgba(163,113,247,0.06));
+            border-bottom: 1px solid var(--border);
+            overflow: hidden;
+        }
+        .thesis-content {
+            display: flex; align-items: center; gap: 10px;
+            padding: 7px 14px; min-height: 28px;
+        }
+        .thesis-label {
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            color: #fff; font-size: 8px; font-weight: 700; letter-spacing: 1px;
+            padding: 2px 7px; border-radius: 3px; white-space: nowrap; flex-shrink: 0;
+        }
+        .thesis-text {
+            font-size: 11px; color: var(--text-2); line-height: 1.4;
+        }
+        .thesis-text strong { color: var(--text-1); }
+        .thesis-toggle {
+            background: none; border: 1px solid var(--border); border-radius: 4px;
+            color: var(--text-3); cursor: pointer; padding: 1px 6px; font-size: 12px;
+            flex-shrink: 0; transition: transform 0.2s;
+        }
+        .thesis-toggle:hover { color: var(--blue); border-color: var(--blue); }
+        #thesis-bar.expanded .thesis-toggle { transform: rotate(180deg); }
+        .thesis-expanded {
+            max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+        }
+        #thesis-bar.expanded .thesis-expanded { max-height: 200px; }
+        .thesis-pillars {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
+            padding: 0 14px 10px;
+        }
+        .thesis-pillar {
+            display: flex; gap: 8px; font-size: 10px; color: var(--text-2);
+            line-height: 1.5; background: var(--bg-3); border-radius: 6px;
+            padding: 8px 10px; border: 1px solid var(--border);
+        }
+        .thesis-pillar strong { color: var(--text-1); }
+        .thesis-pillar-icon { font-size: 18px; flex-shrink: 0; }
+        .thesis-rules {
+            font-size: 9px; color: var(--text-3); padding: 0 14px 10px;
+            line-height: 1.6;
+        }
+        .thesis-rules strong { color: var(--text-2); }
+
         /* ─── MAIN LAYOUT ─── */
         #main {
             display: grid;
@@ -544,6 +592,37 @@
         .ai-body { font-size: 11px; line-height: 1.7; color: var(--text-2); }
         .ai-body strong { color: var(--text-1); }
 
+        /* ── Recommendation History Timeline ─────────── */
+        .rec-history { margin-top: 4px; }
+        .rec-tl-item {
+            position: relative; padding: 8px 10px 8px 22px;
+            border-left: 2px solid var(--border); margin-left: 6px;
+            font-size: 11px; line-height: 1.5;
+        }
+        .rec-tl-item:last-child { border-left-color: transparent; }
+        .rec-tl-dot {
+            position: absolute; left: -5px; top: 10px;
+            width: 8px; height: 8px; border-radius: 50%;
+            border: 2px solid var(--bg-2);
+        }
+        .rec-tl-date { font-size: 9px; color: var(--text-3); margin-bottom: 2px; }
+        .rec-tl-rec {
+            font-size: 10px; font-weight: 700; padding: 1px 6px;
+            border-radius: 3px; display: inline-block; margin-bottom: 3px;
+        }
+        .rec-tl-conf { font-size: 10px; color: var(--text-2); margin-left: 6px; }
+        .rec-tl-reason {
+            font-size: 10px; color: var(--text-2); margin-top: 3px;
+            padding: 5px 8px; background: var(--bg-3); border-radius: 5px;
+            border-left: 2px solid var(--gold);
+        }
+        .rec-tl-change {
+            font-size: 9px; font-weight: 600; margin-top: 2px;
+        }
+        .rec-tl-change.up { color: var(--green); }
+        .rec-tl-change.down { color: var(--red); }
+        .rec-tl-change.same { color: var(--text-3); }
+
         .ai-levels {
             display: grid; grid-template-columns: 1fr 1fr;
             gap: 6px; margin-bottom: 4px;
@@ -925,6 +1004,36 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════
+     INVESTING THESIS BANNER
+══════════════════════════════════════════════════ -->
+<div id="thesis-bar">
+    <div class="thesis-content">
+        <span class="thesis-label">STRATEGY</span>
+        <span class="thesis-text">Identifying short-term opportunities in <strong>AI, Cloud, Semiconductors &amp; Robotics</strong> — buying blue-chip leaders at technically-confirmed entry points. Long-only, 1-day to 3-month holds, pre-earnings momentum plays.</span>
+        <button class="thesis-toggle" onclick="this.parentElement.parentElement.classList.toggle('expanded')" title="Show more">▾</button>
+    </div>
+    <div class="thesis-expanded">
+        <div class="thesis-pillars">
+            <div class="thesis-pillar">
+                <div class="thesis-pillar-icon">🤖</div>
+                <div><strong>AI &amp; Robotics</strong><br>The next industrial revolution. NVDA, AMD, ARM, TSLA, ISRG, BOTZ — companies building the infrastructure and intelligence layer.</div>
+            </div>
+            <div class="thesis-pillar">
+                <div class="thesis-pillar-icon">☁️</div>
+                <div><strong>Cloud &amp; Software</strong><br>Recurring revenue machines. MSFT, AMZN, ORCL, CRM, PLTR — tariff-exempt, high-margin, AI-integrated platforms.</div>
+            </div>
+            <div class="thesis-pillar">
+                <div class="thesis-pillar-icon">⚡</div>
+                <div><strong>Semiconductors</strong><br>The picks &amp; shovels of AI. TSM, AVGO, MRVL, QCOM — every AI model needs silicon. Capacity is the bottleneck.</div>
+            </div>
+        </div>
+        <div class="thesis-rules">
+            <strong>Rules:</strong> Only buy confirmed uptrends · Stop losses on every position · Sell day before earnings · No margin, no shorting (Stake broker) · Position size max 15% of portfolio
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
      MAIN 3-COLUMN LAYOUT
 ══════════════════════════════════════════════════ -->
 <div id="main-wrap">
@@ -1257,7 +1366,7 @@
             <span class="sec-label" style="margin-bottom:0">Market News</span>
             <div style="display:flex;gap:6px;align-items:center">
                 <span class="market-dot dot-open" style="width:6px;height:6px"></span>
-                <span style="font-size:9px;color:var(--text-3)">5m refresh</span>
+                <span style="font-size:9px;color:var(--text-3)">2m refresh</span>
                 <button class="btn-xs" onclick="fetchNews()">↻ Refresh</button>
             </div>
         </div>
@@ -2014,6 +2123,194 @@ const DEFAULT_INSIGHT = {
     upside: null,
 };
 
+// ─────────────────────────────────────────────────────────
+// RECOMMENDATION HISTORY (localStorage)
+// ─────────────────────────────────────────────────────────
+function getRecHistory() {
+    try { return JSON.parse(localStorage.getItem('rec_history') || '{}'); }
+    catch(e) { return {}; }
+}
+
+function saveRecHistory(hist) {
+    localStorage.setItem('rec_history', JSON.stringify(hist));
+}
+
+function getTodayStr() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+// Detect what changed between two snapshots and explain WHY
+function detectChanges(prev, curr, ins) {
+    const changes = [];
+
+    if (prev.rec !== curr.rec) {
+        const recMap = {
+            'BUY NOW': 'upgraded to BUY NOW',
+            'BUY WHEN': 'set to BUY WHEN (conditional)',
+            'WATCH': 'moved to WATCH',
+            'NOT YET': 'downgraded to NOT YET',
+            'DO NOT BUY': 'downgraded to DO NOT BUY',
+        };
+        const action = recMap[curr.rec] || `changed to ${curr.rec}`;
+
+        // Generate reason based on the recommendation change
+        let reason = '';
+        if (curr.rec.includes('BUY NOW') && prev.rec !== 'BUY NOW') {
+            reason = ins?.buyTrigger
+                ? `Entry trigger met. ${ins.exitRule || ''}`
+                : 'Technical signals confirmed uptrend — entry conditions met.';
+        } else if (curr.rec.includes('NOT YET') || curr.rec.includes('DO NOT BUY')) {
+            reason = 'Technical signals bearish or entry conditions not yet met. Waiting for reversal confirmation.';
+        } else if (curr.rec.includes('WAIT') || curr.rec.includes('WHEN')) {
+            reason = ins?.buyTrigger || 'Conditional — waiting for specific trigger before entry.';
+        } else if (curr.rec.includes('WATCH')) {
+            reason = 'On watchlist — monitoring for setup. Not yet actionable.';
+        }
+
+        changes.push({ type: 'rec', label: `Signal ${action}`, reason });
+    }
+
+    if (prev.confidence !== curr.confidence && curr.confidence !== null) {
+        const diff = curr.confidence - prev.confidence;
+        const dir = diff > 0 ? 'up' : 'down';
+        const arrow = diff > 0 ? '▲' : '▼';
+
+        // Generate reason for confidence change
+        let reason = '';
+        if (diff > 0) {
+            const reasons = [];
+            if (ins?.signals) {
+                const greenSignals = ins.signals.filter(s => s.col === 'var(--green)');
+                if (greenSignals.length) reasons.push(greenSignals.map(s => s.label + ': ' + s.val).join('; '));
+            }
+            if (ins?.bull?.length) reasons.push(ins.bull[0]);
+            reason = reasons.length ? reasons.join('. ') : 'Improving technical setup and/or positive catalyst.';
+        } else {
+            const reasons = [];
+            if (ins?.signals) {
+                const redSignals = ins.signals.filter(s => s.col === 'var(--red)');
+                if (redSignals.length) reasons.push(redSignals.map(s => s.label + ': ' + s.val).join('; '));
+            }
+            if (ins?.bear?.length) reasons.push(ins.bear[0]);
+            reason = reasons.length ? reasons.join('. ') : 'Deteriorating technicals or negative macro/sector headwinds.';
+        }
+
+        changes.push({
+            type: 'conf',
+            label: `${arrow} Confidence ${prev.confidence}/10 → ${curr.confidence}/10`,
+            dir,
+            reason
+        });
+    }
+
+    if (prev.stTarget !== curr.stTarget && curr.stTarget) {
+        changes.push({ type: 'target', label: `Target changed: ${prev.stTarget || '—'} → ${curr.stTarget}`, reason: 'Price levels adjusted based on recent price action.' });
+    }
+
+    return changes;
+}
+
+// Snapshot today's recommendations
+function snapshotRecommendations() {
+    const hist = getRecHistory();
+    const today = getTodayStr();
+
+    Object.entries(INSIGHTS).forEach(([tvSym, ins]) => {
+        if (ins.sym === '—') return;
+        if (!hist[tvSym]) hist[tvSym] = [];
+
+        const wl = WATCHLIST.find(w => w.tv === tvSym);
+        const conf = wl?.confidence ?? null;
+
+        const curr = {
+            date: today,
+            rec: ins.rec,
+            recClass: ins.recClass,
+            confidence: conf,
+            stTarget: ins.stTarget || null,
+            holdPeriod: ins.holdPeriod || null,
+        };
+
+        const entries = hist[tvSym];
+        const last = entries[entries.length - 1];
+
+        // Only add if it's a new day or something changed
+        if (!last || last.date !== today) {
+            // Detect changes from previous entry
+            if (last) {
+                curr.changes = detectChanges(last, curr, ins);
+            } else {
+                curr.changes = [{ type: 'new', label: 'Initial recommendation recorded', reason: ins.summary?.replace(/<[^>]+>/g, '').slice(0, 120) + '…' }];
+            }
+            entries.push(curr);
+        } else if (last.date === today) {
+            // Update today's entry if values changed
+            const prevForCompare = entries.length >= 2 ? entries[entries.length - 2] : { rec: '', confidence: null, stTarget: null };
+            if (last.rec !== curr.rec || last.confidence !== curr.confidence) {
+                curr.changes = detectChanges(prevForCompare, curr, ins);
+                entries[entries.length - 1] = curr;
+            }
+        }
+
+        // Keep max 30 days of history
+        if (entries.length > 30) entries.splice(0, entries.length - 30);
+    });
+
+    saveRecHistory(hist);
+}
+
+function renderRecHistory(tvSym) {
+    const hist = getRecHistory();
+    const entries = hist[tvSym];
+
+    if (!entries || entries.length === 0) {
+        return '<div class="wl-sug-empty">No recommendation history yet — check back tomorrow.</div>';
+    }
+
+    const recColors = { 'badge-active':'var(--green)', 'badge-wait':'var(--gold)', 'badge-no':'var(--red)', 'badge-watch':'var(--blue)' };
+    const recBg = { 'badge-active':'var(--green-dim)', 'badge-wait':'var(--gold-dim)', 'badge-no':'var(--red-dim)', 'badge-watch':'var(--blue-dim)' };
+
+    // Show most recent first
+    const sorted = [...entries].reverse();
+
+    return '<div class="rec-history">' + sorted.map((e, i) => {
+        const col = recColors[e.recClass] || 'var(--blue)';
+        const bg = recBg[e.recClass] || 'var(--blue-dim)';
+        const isToday = e.date === getTodayStr();
+        const dateLabel = isToday ? 'Today' : formatHistDate(e.date);
+
+        let changesHTML = '';
+        if (e.changes && e.changes.length) {
+            changesHTML = e.changes.map(c => {
+                const dirClass = c.dir === 'up' ? 'up' : c.dir === 'down' ? 'down' : 'same';
+                return `
+                    <div class="rec-tl-change ${dirClass}">${c.label}</div>
+                    ${c.reason ? `<div class="rec-tl-reason">${c.reason}</div>` : ''}
+                `;
+            }).join('');
+        }
+
+        return `
+            <div class="rec-tl-item">
+                <div class="rec-tl-dot" style="background:${col}"></div>
+                <div class="rec-tl-date">${dateLabel}</div>
+                <span class="rec-tl-rec" style="background:${bg};color:${col}">${e.rec}</span>
+                ${e.confidence !== null ? `<span class="rec-tl-conf">Confidence: ${e.confidence}/10</span>` : ''}
+                ${e.stTarget ? `<span class="rec-tl-conf">· Target: ${e.stTarget}</span>` : ''}
+                ${changesHTML}
+            </div>
+        `;
+    }).join('') + '</div>';
+}
+
+function formatHistDate(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+}
+
 function renderAnalysis(tvSym) {
     const d = INSIGHTS[tvSym] || DEFAULT_INSIGHT;
     const ap = document.getElementById('analysis-panel');
@@ -2079,6 +2376,11 @@ function renderAnalysis(tvSym) {
         <div class="ai-section">
             <div class="ai-section-title">What To Watch / Action</div>
             <div class="ai-body">${d.watch}</div>
+        </div>
+
+        <div class="ai-section">
+            <div class="ai-section-title">Recommendation History</div>
+            ${renderRecHistory(tvSym)}
         </div>
 
         <div style="margin-top:10px;padding:8px;background:var(--bg-3);border-radius:5px;font-size:9px;color:var(--text-3);line-height:1.6">
@@ -2344,9 +2646,14 @@ let newsFilter = 'all';
 
 const FEEDS = [
     { url: 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=NVDA,MSFT,AMZN,TSM,ORCL&region=US&lang=en-US', name: 'Yahoo Finance' },
+    { url: 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=META,PLTR,AVGO,AMD,ARM,CRWD&region=US&lang=en-US', name: 'Yahoo Finance' },
     { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', name: 'CNBC Markets' },
+    { url: 'https://www.cnbc.com/id/19854910/device/rss/rss.html', name: 'CNBC Tech' },
+    { url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10001147', name: 'CNBC Top' },
     { url: 'https://www.marketwatch.com/rss/topstories', name: 'MarketWatch' },
-    { url: 'https://feeds.reuters.com/reuters/businessNews', name: 'Reuters' }
+    { url: 'https://feeds.reuters.com/reuters/businessNews', name: 'Reuters' },
+    { url: 'https://feeds.reuters.com/reuters/technologyNews', name: 'Reuters Tech' },
+    { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', name: 'BBC Business' },
 ];
 const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
@@ -2385,7 +2692,7 @@ function timeAgo(dateStr) {
 
 async function fetchFeed(url, name) {
     try {
-        const res = await fetch(`${RSS2JSON}${encodeURIComponent(url)}&count=20`, { signal: AbortSignal.timeout(8000) });
+        const res = await fetch(`${RSS2JSON}${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(8000) });
         const data = await res.json();
         if (data.status === 'ok' && data.items) {
             return data.items.map(item => ({
@@ -2555,10 +2862,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchAUDUSD, 5 * 60 * 1000);
 
     fetchNews();
-    setInterval(fetchNews, 5 * 60 * 1000);
+    setInterval(fetchNews, 2 * 60 * 1000);
 
     // Build new picks on load
     buildNewPicks();
+
+    // Snapshot today's recommendations for history tracking
+    snapshotRecommendations();
 
     // Default analysis tab for TSM
     renderAnalysis('NYSE:TSM');
