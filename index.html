@@ -75,8 +75,8 @@
             font-size: 18px;
         }
         .logo-text { line-height: 1.2; }
-        .logo-text .title { font-size: 14px; font-weight: 700; }
-        .logo-text .sub { font-size: 10px; color: var(--text-3); }
+        .logo-text .title { font-size: 15px; font-weight: 700; }
+        .logo-text .sub { font-size: 11px; color: var(--text-3); }
 
         .header-pills { display: flex; gap: 8px; align-items: center; }
         .pill {
@@ -85,7 +85,7 @@
             border-radius: 6px; padding: 4px 12px; cursor: default;
             min-width: 80px;
         }
-        .pill-label { font-size: 9px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; }
+        .pill-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; }
         .pill-value { font-family: var(--font-mono); font-size: 13px; font-weight: 500; line-height: 1.4; }
 
         .market-dot {
@@ -109,13 +109,13 @@
         }
         .alert-tag {
             background: var(--red); color: #fff;
-            font-size: 9px; font-weight: 700; letter-spacing: 0.8px;
-            padding: 2px 6px; border-radius: 3px; white-space: nowrap; flex-shrink: 0;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
+            padding: 3px 8px; border-radius: 3px; white-space: nowrap; flex-shrink: 0;
         }
         .alert-scroll-wrap { overflow: hidden; flex: 1; }
         .alert-scroll {
             display: inline-block; white-space: nowrap;
-            font-size: 11px; color: rgba(248,81,73,0.85);
+            font-size: 12px; color: rgba(248,81,73,0.85);
             animation: scroll-ticker 40s linear infinite;
         }
         @keyframes scroll-ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
@@ -133,11 +133,11 @@
         }
         .thesis-label {
             background: linear-gradient(135deg, var(--blue), var(--purple));
-            color: #fff; font-size: 8px; font-weight: 700; letter-spacing: 1px;
-            padding: 2px 7px; border-radius: 3px; white-space: nowrap; flex-shrink: 0;
+            color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 1px;
+            padding: 3px 9px; border-radius: 3px; white-space: nowrap; flex-shrink: 0;
         }
         .thesis-text {
-            font-size: 11px; color: var(--text-2); line-height: 1.4;
+            font-size: 12px; color: var(--text-2); line-height: 1.5;
         }
         .thesis-text strong { color: var(--text-1); }
         .thesis-toggle {
@@ -156,14 +156,14 @@
             padding: 0 14px 10px;
         }
         .thesis-pillar {
-            display: flex; gap: 8px; font-size: 10px; color: var(--text-2);
+            display: flex; gap: 8px; font-size: 12px; color: var(--text-2);
             line-height: 1.5; background: var(--bg-3); border-radius: 6px;
-            padding: 8px 10px; border: 1px solid var(--border);
+            padding: 10px 12px; border: 1px solid var(--border);
         }
         .thesis-pillar strong { color: var(--text-1); }
         .thesis-pillar-icon { font-size: 18px; flex-shrink: 0; }
         .thesis-rules {
-            font-size: 9px; color: var(--text-3); padding: 0 14px 10px;
+            font-size: 11px; color: var(--text-3); padding: 0 14px 10px;
             line-height: 1.6;
         }
         .thesis-rules strong { color: var(--text-2); }
@@ -171,12 +171,12 @@
         /* ─── MAIN LAYOUT ─── */
         #main {
             display: grid;
-            grid-template-columns: 268px 1fr 296px;
+            grid-template-columns: 268px 1fr 340px;
             overflow: hidden;
             height: 100%;
             transition: grid-template-columns 0.3s cubic-bezier(0.4,0,0.2,1);
         }
-        #main.left-collapsed  { grid-template-columns: 0px 1fr 296px; }
+        #main.left-collapsed  { grid-template-columns: 0px 1fr 340px; }
         #main.right-collapsed { grid-template-columns: 268px 1fr 0px; }
         #main.left-collapsed.right-collapsed { grid-template-columns: 0px 1fr 0px; }
 
@@ -240,7 +240,7 @@
         }
         #main.left-collapsed ~ #toggle-left { left: 0px; }
         #toggle-right {
-            right: 296px; transform: translateY(-50%);
+            right: 340px; transform: translateY(-50%);
             border-radius: 6px 0 0 6px; border-right: none;
         }
         #main.right-collapsed ~ #toggle-right { right: 0px; }
@@ -363,7 +363,7 @@
 
         /* ─── SHARED COMPONENTS ─── */
         .sec-label {
-            font-size: 10px; font-weight: 600; color: var(--text-2);
+            font-size: 12px; font-weight: 600; color: var(--text-2);
             text-transform: uppercase; letter-spacing: 0.9px; margin-bottom: 8px;
             display: flex; align-items: center; justify-content: space-between;
         }
@@ -379,13 +379,14 @@
         .trade-card {
             background: var(--bg-3);
             border: 1px solid var(--border);
-            border-radius: 7px;
-            padding: 10px 10px 10px 13px;
-            margin-bottom: 7px;
+            border-radius: 8px;
+            padding: 12px 12px 12px 15px;
+            margin-bottom: 8px;
             position: relative;
             overflow: hidden;
             cursor: pointer;
             transition: border-color 0.15s, background 0.15s;
+            min-height: 44px;
         }
         .trade-card:hover {
             border-color: var(--blue);
@@ -393,43 +394,44 @@
         }
         .trade-card::before {
             content: ''; position: absolute;
-            left: 0; top: 0; bottom: 0; width: 3px;
+            left: 0; top: 0; bottom: 0; width: 4px;
         }
         .tc-active::before { background: var(--green); }
         .tc-wait::before   { background: var(--gold); }
         .tc-no::before     { background: var(--red); }
 
-        .tc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
-        .tc-sym  { font-size: 15px; font-weight: 700; }
+        .tc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+        .tc-sym  { font-size: 16px; font-weight: 700; }
         .tc-badge {
-            font-size: 9px; font-weight: 700; padding: 2px 6px;
-            border-radius: 3px; letter-spacing: 0.4px;
+            font-size: 11px; font-weight: 700; padding: 3px 8px;
+            border-radius: 4px; letter-spacing: 0.4px;
         }
         .badge-active { background: var(--green-dim); color: var(--green); }
         .badge-wait   { background: var(--gold-dim);  color: var(--gold); }
         .badge-no     { background: var(--red-dim);   color: var(--red); }
         .badge-watch  { background: var(--blue-dim);  color: var(--blue); }
 
-        .tc-sub { font-size: 10px; color: var(--text-3); margin-bottom: 7px; }
-        .tc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 6px; }
-        .tc-price-label { font-size: 8px; color: var(--text-3); text-transform: uppercase; }
-        .tc-price-val   { font-family: var(--font-mono); font-size: 11px; font-weight: 500; }
+        .tc-sub { font-size: 11px; color: var(--text-3); margin-bottom: 8px; }
+        .tc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+        .tc-price-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; }
+        .tc-price-val   { font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
 
-        .conf-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
-        .conf-bar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+        .conf-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+        .conf-bar { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
         .conf-fill { height: 100%; border-radius: 2px; }
-        .conf-score { font-size: 10px; font-weight: 600; width: 28px; text-align: right; font-family: var(--font-mono); }
-        .tc-note { font-size: 9px; color: var(--text-3); line-height: 1.5; }
+        .conf-score { font-size: 12px; font-weight: 600; width: 34px; text-align: right; font-family: var(--font-mono); }
+        .tc-note { font-size: 11px; color: var(--text-3); line-height: 1.5; }
 
         /* ─── WATCHLIST CARDS ─── */
         .watchlist-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
         .wl-card {
             background: var(--bg-2);
             border: 1px solid var(--border);
-            border-radius: 7px;
-            padding: 9px;
+            border-radius: 8px;
+            padding: 11px;
             cursor: pointer;
             transition: border-color 0.15s, box-shadow 0.15s;
+            min-height: 44px;
         }
         .wl-card:hover { border-color: var(--blue); }
         .wl-card.wl-selected {
@@ -437,29 +439,30 @@
             box-shadow: 0 0 0 1px var(--blue), inset 0 0 40px rgba(88,166,255,0.03);
         }
         .wl-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-        .wl-sym  { font-size: 14px; font-weight: 700; }
-        .wl-name { font-size: 9px; color: var(--text-3); }
-        .wl-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 8px; }
+        .wl-sym  { font-size: 15px; font-weight: 700; }
+        .wl-name { font-size: 11px; color: var(--text-3); }
+        .wl-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; }
         .wl-row  { }
-        .wl-rl   { font-size: 8px; color: var(--text-3); text-transform: uppercase; }
-        .wl-rv   { font-family: var(--font-mono); font-size: 11px; }
+        .wl-rl   { font-size: 10px; color: var(--text-3); text-transform: uppercase; }
+        .wl-rv   { font-family: var(--font-mono); font-size: 12px; }
         .wl-conf-row { margin-top: 7px; }
-        .wl-note { font-size: 9px; color: var(--text-3); margin-top: 5px; line-height: 1.4; }
+        .wl-note { font-size: 11px; color: var(--text-3); margin-top: 6px; line-height: 1.5; }
 
         /* ─── EARNINGS ─── */
         .earn-row {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 7px 0; border-bottom: 1px solid var(--border-light);
-            cursor: pointer; border-radius: 4px; padding: 7px 6px;
+            border-bottom: 1px solid var(--border-light);
+            cursor: pointer; border-radius: 5px; padding: 10px 8px;
             transition: background 0.1s;
+            min-height: 44px;
         }
         .earn-row:hover { background: var(--blue-dim); }
         .earn-row:last-child { border-bottom: none; }
-        .earn-date { font-family: var(--font-mono); font-size: 10px; color: var(--text-2); width: 52px; }
-        .earn-sym  { font-weight: 600; font-size: 13px; }
+        .earn-date { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); width: 56px; }
+        .earn-sym  { font-weight: 600; font-size: 14px; }
         .earn-days {
-            font-size: 9px; font-weight: 600; padding: 2px 6px;
-            border-radius: 3px; font-family: var(--font-mono);
+            font-size: 11px; font-weight: 600; padding: 3px 8px;
+            border-radius: 4px; font-family: var(--font-mono);
         }
         .ed-hot  { background: var(--red-dim);  color: var(--red); }
         .ed-soon { background: var(--gold-dim); color: var(--gold); }
@@ -478,29 +481,33 @@
         .rdot-hi  { background: var(--red);  box-shadow: 0 0 5px var(--red); }
         .rdot-med { background: var(--gold); box-shadow: 0 0 5px var(--gold); }
         .rdot-lo  { background: var(--green);box-shadow: 0 0 5px var(--green); }
-        .risk-body { font-size: 11px; color: var(--text-2); line-height: 1.5; }
-        .risk-body strong { color: var(--text-1); display: block; font-size: 11px; margin-bottom: 1px; }
+        .risk-body { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+        .risk-body strong { color: var(--text-1); display: block; font-size: 12px; margin-bottom: 2px; }
 
         /* ─── STRATEGY STATS ─── */
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
         .stat-box { text-align: center; background: var(--bg-2); border-radius: 5px; padding: 7px 4px; }
-        .stat-big { font-size: 20px; font-weight: 700; line-height: 1.2; }
-        .stat-small { font-size: 9px; color: var(--text-3); margin-top: 2px; }
+        .stat-big { font-size: 22px; font-weight: 700; line-height: 1.2; }
+        .stat-small { font-size: 11px; color: var(--text-3); margin-top: 3px; }
 
         /* ─── NEWS ─── */
         .news-item {
-            padding: 9px 0;
+            padding: 10px 10px;
             border-bottom: 1px solid var(--border-light);
             cursor: pointer;
+            min-height: 44px;
+            border-radius: 4px;
+            transition: background 0.1s;
         }
         .news-item:last-child { border-bottom: none; }
+        .news-item:hover { background: rgba(88,166,255,0.04); }
         .news-item:hover .news-headline { color: var(--blue); }
-        .news-headline { font-size: 12px; line-height: 1.5; color: var(--text-1); margin-bottom: 4px; }
-        .news-meta { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
-        .news-src  { font-size: 9px; color: var(--blue); font-weight: 500; }
-        .news-time { font-size: 9px; color: var(--text-3); }
+        .news-headline { font-size: 13px; line-height: 1.5; color: var(--text-1); margin-bottom: 5px; }
+        .news-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .news-src  { font-size: 11px; color: var(--blue); font-weight: 500; }
+        .news-time { font-size: 11px; color: var(--text-3); }
         .news-sent {
-            font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 500;
+            font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: 500;
         }
         .sent-bull { background: var(--green-dim); color: var(--green); }
         .sent-bear { background: var(--red-dim);   color: var(--red); }
@@ -509,15 +516,16 @@
 
         /* ─── BUTTONS ─── */
         .btn {
-            padding: 4px 10px;
-            border-radius: 4px;
+            padding: 6px 12px;
+            border-radius: 5px;
             border: 1px solid var(--border);
             background: transparent;
             color: var(--text-2);
-            font-size: 11px;
+            font-size: 12px;
             cursor: pointer;
             font-family: 'Inter', sans-serif;
             transition: all 0.15s;
+            min-height: 32px;
         }
         .btn:hover, .btn.active {
             background: var(--blue);
@@ -525,9 +533,9 @@
             color: #fff;
         }
         .btn-xs {
-            padding: 2px 7px;
-            font-size: 9px;
-            border-radius: 3px;
+            padding: 4px 9px;
+            font-size: 11px;
+            border-radius: 4px;
             border: 1px solid var(--border);
             background: transparent;
             color: var(--text-2);
@@ -540,24 +548,26 @@
         .etf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
         .etf-card {
             background: var(--bg-3); border: 1px solid var(--border);
-            border-radius: 5px; padding: 7px 8px; cursor: pointer;
+            border-radius: 6px; padding: 10px; cursor: pointer;
             transition: border-color 0.15s;
+            min-height: 44px;
         }
         .etf-card:hover { border-color: var(--blue); }
-        .etf-sym  { font-size: 12px; font-weight: 600; }
-        .etf-name { font-size: 9px; color: var(--text-3); }
+        .etf-sym  { font-size: 14px; font-weight: 600; }
+        .etf-name { font-size: 11px; color: var(--text-3); }
 
         /* ─── NEW PICKS SECTION ─── */
         .new-pick-card {
             background: var(--bg-3);
             border: 1px solid var(--border);
-            border-radius: 7px;
-            padding: 9px 10px 9px 12px;
-            margin-bottom: 7px;
+            border-radius: 8px;
+            padding: 11px 12px 11px 14px;
+            margin-bottom: 8px;
             cursor: pointer;
             transition: border-color 0.15s;
             position: relative;
             overflow: hidden;
+            min-height: 44px;
         }
         .new-pick-card::before {
             content: ''; position: absolute;
@@ -566,19 +576,19 @@
         }
         .new-pick-card:hover { border-color: var(--purple); }
         .new-pick-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-        .new-pick-sym { font-size: 14px; font-weight: 700; }
+        .new-pick-sym { font-size: 15px; font-weight: 700; }
         .new-pick-signal {
-            font-size: 9px; font-weight: 700; padding: 2px 6px;
-            border-radius: 3px; letter-spacing: 0.4px;
+            font-size: 11px; font-weight: 700; padding: 3px 8px;
+            border-radius: 4px; letter-spacing: 0.4px;
         }
-        .new-pick-thesis { font-size: 10px; color: var(--text-2); line-height: 1.5; margin-bottom: 5px; }
+        .new-pick-thesis { font-size: 12px; color: var(--text-2); line-height: 1.5; margin-bottom: 6px; }
         .new-pick-footer { display: flex; align-items: center; gap: 6px; }
 
         /* ─── ANALYSIS PANEL ─── */
         #analysis-panel {
             flex: 1;
             overflow-y: auto;
-            padding: 12px 14px;
+            padding: 14px 16px;
             min-height: 0;
             display: none;
         }
@@ -591,29 +601,29 @@
             margin-bottom: 12px;
         }
         .ai-sym-badge {
-            font-size: 18px; font-weight: 700;
+            font-size: 22px; font-weight: 700;
         }
         .ai-rec-badge {
-            font-size: 11px; font-weight: 700;
-            padding: 3px 10px; border-radius: 4px; letter-spacing: 0.3px;
+            font-size: 13px; font-weight: 700;
+            padding: 4px 12px; border-radius: 5px; letter-spacing: 0.3px;
         }
-        .ai-updated { font-size: 9px; color: var(--text-3); margin-left: auto; }
+        .ai-updated { font-size: 11px; color: var(--text-3); margin-left: auto; }
 
-        .ai-section { margin-bottom: 12px; }
+        .ai-section { margin-bottom: 14px; }
         .ai-section-title {
-            font-size: 9px; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.8px; color: var(--text-3); margin-bottom: 6px;
-            padding-bottom: 4px; border-bottom: 1px solid var(--border-light);
+            font-size: 11px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.8px; color: var(--text-3); margin-bottom: 8px;
+            padding-bottom: 5px; border-bottom: 1px solid var(--border-light);
         }
-        .ai-body { font-size: 11px; line-height: 1.7; color: var(--text-2); }
+        .ai-body { font-size: 13px; line-height: 1.7; color: var(--text-2); }
         .ai-body strong { color: var(--text-1); }
 
         /* ── Recommendation History Timeline ─────────── */
         .rec-history { margin-top: 4px; }
         .rec-tl-item {
-            position: relative; padding: 8px 10px 8px 22px;
+            position: relative; padding: 10px 10px 10px 22px;
             border-left: 2px solid var(--border); margin-left: 6px;
-            font-size: 11px; line-height: 1.5;
+            font-size: 13px; line-height: 1.5;
         }
         .rec-tl-item:last-child { border-left-color: transparent; }
         .rec-tl-dot {
@@ -621,19 +631,19 @@
             width: 8px; height: 8px; border-radius: 50%;
             border: 2px solid var(--bg-2);
         }
-        .rec-tl-date { font-size: 9px; color: var(--text-3); margin-bottom: 2px; }
+        .rec-tl-date { font-size: 11px; color: var(--text-3); margin-bottom: 3px; }
         .rec-tl-rec {
-            font-size: 10px; font-weight: 700; padding: 1px 6px;
-            border-radius: 3px; display: inline-block; margin-bottom: 3px;
+            font-size: 12px; font-weight: 700; padding: 2px 8px;
+            border-radius: 4px; display: inline-block; margin-bottom: 4px;
         }
-        .rec-tl-conf { font-size: 10px; color: var(--text-2); margin-left: 6px; }
+        .rec-tl-conf { font-size: 12px; color: var(--text-2); margin-left: 6px; }
         .rec-tl-reason {
-            font-size: 10px; color: var(--text-2); margin-top: 3px;
-            padding: 5px 8px; background: var(--bg-3); border-radius: 5px;
-            border-left: 2px solid var(--gold);
+            font-size: 12px; color: var(--text-2); margin-top: 4px;
+            padding: 6px 10px; background: var(--bg-3); border-radius: 5px;
+            border-left: 3px solid var(--gold);
         }
         .rec-tl-change {
-            font-size: 9px; font-weight: 600; margin-top: 2px;
+            font-size: 11px; font-weight: 600; margin-top: 3px;
         }
         .rec-tl-change.up { color: var(--green); }
         .rec-tl-change.down { color: var(--red); }
@@ -647,27 +657,28 @@
             background: var(--bg-3); border: 1px solid var(--border);
             border-radius: 5px; padding: 7px 8px;
         }
-        .ai-level-label { font-size: 8px; color: var(--text-3); text-transform: uppercase; }
-        .ai-level-val { font-family: var(--font-mono); font-size: 12px; font-weight: 500; }
+        .ai-level-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; }
+        .ai-level-val { font-family: var(--font-mono); font-size: 14px; font-weight: 600; }
 
         .ai-signal-row {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 5px 0; border-bottom: 1px solid var(--border-light);
-            font-size: 11px;
+            padding: 7px 0; border-bottom: 1px solid var(--border-light);
+            font-size: 13px;
+            min-height: 36px;
         }
         .ai-signal-row:last-child { border-bottom: none; }
         .signal-label { color: var(--text-2); }
-        .signal-val { font-weight: 600; font-family: var(--font-mono); font-size: 11px; }
+        .signal-val { font-weight: 600; font-family: var(--font-mono); font-size: 13px; }
 
         .bullet-list { padding-left: 0; list-style: none; }
         .bullet-list li {
-            font-size: 11px; color: var(--text-2); line-height: 1.6;
-            padding: 3px 0;
-            padding-left: 14px; position: relative;
+            font-size: 13px; color: var(--text-2); line-height: 1.6;
+            padding: 4px 0;
+            padding-left: 16px; position: relative;
         }
         .bullet-list li::before {
             content: '▸'; position: absolute; left: 0;
-            color: var(--text-3); font-size: 9px; top: 5px;
+            color: var(--text-3); font-size: 11px; top: 5px;
         }
         .bullet-list li strong { color: var(--text-1); }
 
@@ -677,12 +688,13 @@
             border-bottom: 1px solid var(--border);
         }
         .right-tab {
-            flex: 1; padding: 9px 4px; text-align: center;
-            font-size: 11px; font-weight: 500; color: var(--text-2);
+            flex: 1; padding: 12px 4px; text-align: center;
+            font-size: 13px; font-weight: 500; color: var(--text-2);
             cursor: pointer; border-bottom: 2px solid transparent;
             transition: all 0.15s; background: none; border-top: none;
             border-left: none; border-right: none;
             font-family: 'Inter', sans-serif;
+            min-height: 44px;
         }
         .right-tab:hover { color: var(--text-1); }
         .right-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
@@ -708,7 +720,7 @@
         .divider  { height: 1px; background: var(--border); margin: 8px 0; }
         .tag-row  { display: flex; gap: 4px; margin-bottom: 6px; }
         .tag {
-            font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 500;
+            font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 500;
         }
         .tag-blue   { background: var(--blue-dim); color: var(--blue); }
         .tag-green  { background: var(--green-dim); color: var(--green); }
@@ -930,40 +942,40 @@
 
         /* ── Feature: Top Action Today ───────────────── */
         #top-action-card {
-            margin: 10px 14px 0; padding: 14px 16px;
-            background: linear-gradient(135deg, rgba(63,185,80,0.08), rgba(88,166,255,0.06));
-            border: 1px solid rgba(63,185,80,0.3); border-radius: 10px;
+            margin: 12px 14px 0; padding: 18px 20px;
+            background: linear-gradient(135deg, rgba(63,185,80,0.12), rgba(88,166,255,0.08));
+            border: 2px solid rgba(63,185,80,0.4); border-radius: 12px;
             position: relative; overflow: hidden;
         }
         #top-action-card::before {
-            content:''; position:absolute; left:0; top:0; bottom:0; width:4px;
+            content:''; position:absolute; left:0; top:0; bottom:0; width:5px;
             background: var(--green);
         }
-        .ta-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
-        .ta-label { font-size:8px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
-            background:var(--green); color:#fff; padding:2px 8px; border-radius:3px; }
-        .ta-sym { font-size:20px; font-weight:800; color:var(--text-1); font-family:var(--font-mono); }
-        .ta-rec { font-size:11px; font-weight:700; padding:3px 10px; border-radius:4px; }
-        .ta-body { font-size:12px; color:var(--text-2); line-height:1.6; }
+        .ta-header { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+        .ta-label { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+            background:var(--green); color:#fff; padding:4px 10px; border-radius:4px; }
+        .ta-sym { font-size:28px; font-weight:800; color:var(--text-1); font-family:var(--font-mono); }
+        .ta-rec { font-size:14px; font-weight:700; padding:5px 14px; border-radius:5px; }
+        .ta-body { font-size:14px; color:var(--text-2); line-height:1.6; }
         .ta-body strong { color:var(--text-1); }
-        .ta-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:10px; }
-        .ta-metric { text-align:center; padding:6px; background:rgba(0,0,0,0.2); border-radius:6px; }
-        .ta-metric-val { font-size:14px; font-weight:700; font-family:var(--font-mono); }
-        .ta-metric-label { font-size:8px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.5px; }
-        .ta-none { font-size:11px; color:var(--text-3); text-align:center; padding:12px; }
+        .ta-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:12px; }
+        .ta-metric { text-align:center; padding:10px 8px; background:rgba(0,0,0,0.25); border-radius:8px; }
+        .ta-metric-val { font-size:18px; font-weight:700; font-family:var(--font-mono); }
+        .ta-metric-label { font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+        .ta-none { font-size:13px; color:var(--text-3); text-align:center; padding:16px; }
 
         /* ── Feature: Chart Mode Toggle ──────────────── */
         .chart-mode-toggle {
             display:flex; gap:2px; background:var(--bg-3); border-radius:5px; padding:2px;
             border:1px solid var(--border); margin-right:8px; flex-shrink:0;
         }
-        .chart-mode-toggle .btn { padding:3px 10px; font-size:9px; border-radius:3px; }
+        .chart-mode-toggle .btn { padding:5px 12px; font-size:11px; border-radius:4px; }
 
         /* ── Feature: Learning Section ───────────────── */
         .learn-item { padding:8px 0; border-bottom:1px solid var(--border-light); }
         .learn-item:last-child { border-bottom:none; }
-        .learn-q { font-size:11px; font-weight:600; color:var(--blue); margin-bottom:3px; }
-        .learn-a { font-size:10px; color:var(--text-2); line-height:1.6; }
+        .learn-q { font-size:13px; font-weight:600; color:var(--blue); margin-bottom:4px; }
+        .learn-a { font-size:12px; color:var(--text-2); line-height:1.6; }
 
         /* ── Feature: Portfolio Tracking ─────────────── */
         #portfolio-area { padding:0 14px; }
@@ -981,9 +993,9 @@
             padding:6px 12px; font-size:10px; font-weight:600; cursor:pointer;
         }
         .pf-holding {
-            display:flex; align-items:center; gap:8px; padding:7px 8px;
+            display:flex; align-items:center; gap:8px; padding:9px 10px;
             background:var(--bg-3); border:1px solid var(--border); border-radius:6px;
-            margin-bottom:4px; font-size:11px;
+            margin-bottom:5px; font-size:12px; min-height:44px;
         }
         .pf-holding-sym { font-weight:700; color:var(--blue); min-width:42px; font-family:var(--font-mono); }
         .pf-holding-detail { flex:1; color:var(--text-2); font-size:10px; }
@@ -995,7 +1007,7 @@
             background:var(--bg-3); border:1px solid var(--border); border-radius:6px;
             margin-top:6px; font-size:11px;
         }
-        .pf-empty { font-size:10px; color:var(--text-3); text-align:center; padding:10px; }
+        .pf-empty { font-size:12px; color:var(--text-3); text-align:center; padding:12px; }
 
         /* ── Feature: Risk Calculator ────────────────── */
         .risk-row { display:flex; gap:6px; align-items:center; margin-bottom:6px; }
@@ -1012,7 +1024,7 @@
             border:1px solid var(--border);
         }
         .risk-stat-val { font-size:14px; font-weight:700; font-family:var(--font-mono); }
-        .risk-stat-label { font-size:8px; color:var(--text-3); text-transform:uppercase; margin-top:2px; }
+        .risk-stat-label { font-size:10px; color:var(--text-3); text-transform:uppercase; margin-top:2px; }
 
         /* ── Feature: Watchlist Traffic Light ─────────── */
         .wl-traffic { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
@@ -1186,7 +1198,7 @@
                     </div>
                 </div>
                 <div class="conf-row">
-                    <span style="font-size:9px;color:var(--text-3)">Confidence</span>
+                    <span style="font-size:11px;color:var(--text-3)">Confidence</span>
                     <div class="conf-bar"><div class="conf-fill" style="width:60%;background:var(--green)"></div></div>
                     <span class="conf-score c-green">6/10</span>
                 </div>
@@ -1215,7 +1227,7 @@
                     </div>
                 </div>
                 <div class="conf-row">
-                    <span style="font-size:9px;color:var(--text-3)">Confidence</span>
+                    <span style="font-size:11px;color:var(--text-3)">Confidence</span>
                     <div class="conf-bar"><div class="conf-fill" style="width:45%;background:var(--gold)"></div></div>
                     <span class="conf-score c-gold">4.5/10</span>
                 </div>
@@ -1244,7 +1256,7 @@
                     </div>
                 </div>
                 <div class="conf-row">
-                    <span style="font-size:9px;color:var(--text-3)">Confidence</span>
+                    <span style="font-size:11px;color:var(--text-3)">Confidence</span>
                     <div class="conf-bar"><div class="conf-fill" style="width:35%;background:var(--red)"></div></div>
                     <span class="conf-score c-red">3.5/10</span>
                 </div>
@@ -1273,14 +1285,14 @@
                     </div>
                 </div>
                 <div class="conf-row">
-                    <span style="font-size:9px;color:var(--text-3)">Confidence</span>
+                    <span style="font-size:11px;color:var(--text-3)">Confidence</span>
                     <div class="conf-bar"><div class="conf-fill" style="width:55%;background:var(--gold)"></div></div>
                     <span class="conf-score c-gold">5.5/10</span>
                 </div>
                 <div class="tc-note">~7% upside · April earnings season catalyst · Quarter-end institutional buying · Monitor Iran risk</div>
             </div>
 
-            <div style="font-size:9px;color:var(--text-3);margin-top:2px;padding:6px;background:var(--bg-3);border-radius:5px;cursor:pointer" onclick="switchChartSym('NYSE:ORCL','ORCL')">
+            <div style="font-size:11px;color:var(--text-3);margin-top:4px;padding:8px;background:var(--bg-3);border-radius:6px;cursor:pointer;min-height:44px;display:flex;align-items:center" onclick="switchChartSym('NYSE:ORCL','ORCL')">
                 ⚠ NOT ENTERING: ORCL — wait for confirmed floor above $118 52-week low
             </div>
         </div>
@@ -1298,7 +1310,7 @@
         <div>
             <div class="sec-label">
                 <span>Earnings Calendar</span>
-                <span style="font-size:9px;color:var(--text-3)">Sell day BEFORE</span>
+                <span style="font-size:11px;color:var(--text-3)">Sell day BEFORE</span>
             </div>
             <div class="card">
                 <div class="earn-row" onclick="switchChartSym('NYSE:TSM','TSM')">
@@ -1344,7 +1356,7 @@
                     <span class="tag tag-blue">WATCH</span>
                 </div>
             </div>
-            <div style="font-size:9px;color:var(--text-3);margin-top:5px">Pre-earnings window opens 2–3 weeks before. Strategy requires confirmed UPTREND.</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:6px">Pre-earnings window opens 2–3 weeks before. Strategy requires confirmed UPTREND.</div>
         </div>
 
         <!-- Macro Risk Radar -->
@@ -1400,7 +1412,7 @@
                         <div class="stat-small">NVDA &amp; TSM</div>
                     </div>
                 </div>
-                <div style="font-size:9px;color:var(--text-3);margin-top:8px;line-height:1.6">
+                <div style="font-size:11px;color:var(--text-3);margin-top:8px;line-height:1.6">
                     Buy 2–3 weeks before · Sell DAY BEFORE report · UPTREND required — don't buy falling knives<br>
                     <span class="c-gold">⚠ ORCL Sep '25: strategy gave +4.5% but stock +40% post-earnings. Capped upside risk on blowout beats.</span>
                 </div>
@@ -1496,7 +1508,7 @@
             <div class="sec-label" style="margin-bottom:8px">
                 <span>Watchlist</span>
                 <div style="display:flex;gap:6px;align-items:center">
-                    <span style="font-size:9px;color:var(--text-3)">Click to chart</span>
+                    <span style="font-size:11px;color:var(--text-3)">Click to chart</span>
                 </div>
             </div>
             <div class="wl-add-wrap" id="wl-add-wrap">
@@ -1568,8 +1580,8 @@
 
         <!-- Tab bar -->
         <div class="right-tab-bar">
-            <button class="right-tab active" id="tab-news"     onclick="showTab('news')">📰 News</button>
-            <button class="right-tab"        id="tab-analysis" onclick="showTab('analysis')">🔍 Chart Insights</button>
+            <button class="right-tab"        id="tab-news"     onclick="showTab('news')">📰 News</button>
+            <button class="right-tab active" id="tab-analysis" onclick="showTab('analysis')">🔍 Chart Insights</button>
         </div>
 
         <!-- News header -->
@@ -1577,18 +1589,18 @@
             <span class="sec-label" style="margin-bottom:0">Market News</span>
             <div style="display:flex;gap:6px;align-items:center">
                 <span class="market-dot dot-open" style="width:6px;height:6px"></span>
-                <span style="font-size:9px;color:var(--text-3)">2m refresh</span>
+                <span style="font-size:11px;color:var(--text-3)">2m refresh</span>
                 <button class="btn-xs" onclick="fetchNews()">↻ Refresh</button>
             </div>
         </div>
 
         <!-- News filter -->
         <div class="right-filter-bar" id="news-filter-row">
-            <button class="btn active" style="padding:3px 8px;font-size:10px" onclick="setFilter('all',this)">All</button>
-            <button class="btn" style="padding:3px 8px;font-size:10px" onclick="setFilter('reddit',this)">Reddit</button>
-            <button class="btn" style="padding:3px 8px;font-size:10px" onclick="setFilter('tech',this)">Tech</button>
-            <button class="btn" style="padding:3px 8px;font-size:10px" onclick="setFilter('macro',this)">Macro</button>
-            <button class="btn" style="padding:3px 8px;font-size:10px" onclick="setFilter('ai',this)">AI/Chips</button>
+            <button class="btn active" style="padding:5px 10px" onclick="setFilter('all',this)">All</button>
+            <button class="btn" style="padding:5px 10px" onclick="setFilter('reddit',this)">Reddit</button>
+            <button class="btn" style="padding:5px 10px" onclick="setFilter('tech',this)">Tech</button>
+            <button class="btn" style="padding:5px 10px" onclick="setFilter('macro',this)">Macro</button>
+            <button class="btn" style="padding:5px 10px" onclick="setFilter('ai',this)">AI/Chips</button>
         </div>
 
         <!-- TradingView News Timeline -->
@@ -1611,7 +1623,7 @@
         </div>
 
         <!-- RSS + Reddit feed -->
-        <div style="padding:8px 10px 0"><span class="sec-label" style="margin-bottom:0">Reddit &amp; RSS</span></div>
+        <div id="rss-label" style="padding:8px 10px 0"><span class="sec-label" style="margin-bottom:0">Reddit &amp; RSS</span></div>
         <div id="news-feed">
             <div class="news-loading">Loading market news…</div>
         </div>
@@ -1621,13 +1633,14 @@
             <div class="news-loading" style="color:var(--text-3)">Click a stock to see chart insights</div>
         </div>
 
-        <!-- ETF section -->
+        <!-- ETF section (collapsible) -->
         <div class="right-etf-section">
-            <div class="sec-label" style="margin-bottom:7px">
+            <div class="sec-label" style="margin-bottom:7px;cursor:pointer" onclick="toggleETF()">
                 <span>ETF Watchlist</span>
-                <span style="font-size:9px;color:var(--text-3)">Click to chart</span>
+                <span id="etf-toggle" style="font-size:11px;color:var(--text-3)">▾ Show</span>
             </div>
-            <div style="font-size:9px;color:var(--text-3);margin-bottom:4px">ASX / AUD</div>
+            <div id="etf-content" style="display:none">
+            <div style="font-size:11px;color:var(--text-3);margin-bottom:4px">ASX / AUD</div>
             <div class="etf-grid" style="margin-bottom:8px">
                 <div class="etf-card" onclick="switchChartSym('ASX:NDQ')">
                     <div class="etf-sym">NDQ</div>
@@ -1647,7 +1660,7 @@
                     <div class="tag tag-gold" style="margin-top:3px;font-size:8px">5.5/10</div>
                 </div>
             </div>
-            <div style="font-size:9px;color:var(--text-3);margin-bottom:4px">US / USD</div>
+            <div style="font-size:11px;color:var(--text-3);margin-bottom:4px">US / USD</div>
             <div class="etf-grid">
                 <div class="etf-card" onclick="switchChartSym('AMEX:SPY')">
                     <div class="etf-sym">SPY</div>
@@ -1666,6 +1679,7 @@
                     <div class="etf-name">Robotics &amp; AI</div>
                 </div>
             </div>
+            </div><!-- /etf-content -->
         </div>
 
     </div><!-- /right -->
@@ -1770,9 +1784,18 @@ function showTab(tab) {
     const isNews = tab === 'news';
     document.getElementById('tab-news').classList.toggle('active', isNews);
     document.getElementById('tab-analysis').classList.toggle('active', !isNews);
+    // Hide ALL news elements when showing analysis
     document.getElementById('news-header-row').style.display = isNews ? '' : 'none';
     document.getElementById('news-filter-row').style.display = isNews ? '' : 'none';
     document.getElementById('news-feed').style.display = isNews ? '' : 'none';
+    const tvWrap = document.getElementById('tv-news-wrap');
+    if (tvWrap) tvWrap.style.display = isNews ? '' : 'none';
+    const rssLabel = document.getElementById('rss-label');
+    if (rssLabel) rssLabel.style.display = isNews ? '' : 'none';
+    // Hide ETF section when showing analysis to give full room
+    const etfSection = document.querySelector('.right-etf-section');
+    if (etfSection) etfSection.style.display = isNews ? '' : 'none';
+    // Show analysis panel
     const ap = document.getElementById('analysis-panel');
     ap.classList.toggle('visible', !isNews);
 }
@@ -2561,18 +2584,18 @@ function renderAnalysis(tvSym) {
     // Short-term trade box
     const stBoxHTML = (d.holdPeriod && d.holdPeriod !== 'N/A') ? `
         <div style="background:${bg};border:1px solid ${col};border-radius:7px;padding:10px 12px;margin-bottom:12px">
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${col};margin-bottom:8px">Short-Term Trade Plan</div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:${col};margin-bottom:8px">Short-Term Trade Plan</div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
                 <div>
-                    <div style="font-size:8px;color:var(--text-3);text-transform:uppercase">Hold Period</div>
+                    <div style="font-size:10px;color:var(--text-3);text-transform:uppercase">Hold Period</div>
                     <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--text-1)">${d.holdPeriod}</div>
                 </div>
                 <div>
-                    <div style="font-size:8px;color:var(--text-3);text-transform:uppercase">ST Target</div>
+                    <div style="font-size:10px;color:var(--text-3);text-transform:uppercase">ST Target</div>
                     <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--green)">${d.stTarget}</div>
                 </div>
                 <div>
-                    <div style="font-size:8px;color:var(--text-3);text-transform:uppercase">Expected Return</div>
+                    <div style="font-size:10px;color:var(--text-3);text-transform:uppercase">Expected Return</div>
                     <div style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--green)">${d.stReturn}</div>
                 </div>
             </div>
@@ -3156,6 +3179,15 @@ function setChartMode(mode, btn) {
 // ─────────────────────────────────────────────────────────
 // LEARNING SECTION
 // ─────────────────────────────────────────────────────────
+let etfOpen = false;
+function toggleETF() {
+    etfOpen = !etfOpen;
+    const sec = document.getElementById('etf-content');
+    const tog = document.getElementById('etf-toggle');
+    sec.style.display = etfOpen ? '' : 'none';
+    tog.textContent = etfOpen ? '▴ Hide' : '▾ Show';
+}
+
 let learningOpen = false;
 function toggleLearning() {
     learningOpen = !learningOpen;
