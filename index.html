@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Dashboard — Brisbane</title>
+    <title>AI Tech Focused Trading Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://s3.tradingview.com/tv.js"></script>
     <style>
@@ -197,8 +197,11 @@
             padding: 14px 12px;
             display: flex; flex-direction: column; gap: 14px;
             transition: padding 0.3s, opacity 0.25s, border-width 0.3s;
-            overflow: hidden;
+            overflow-y: auto; overflow-x: hidden;
         }
+        #left::-webkit-scrollbar { width: 3px; }
+        #left::-webkit-scrollbar-track { background: transparent; }
+        #left::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
         #main.left-collapsed #left {
             padding: 0; opacity: 0; pointer-events: none; border-right-width: 0;
         }
@@ -209,8 +212,11 @@
             border-left: 1px solid var(--border);
             display: flex; flex-direction: column; min-height: 0;
             transition: opacity 0.25s, border-width 0.3s;
-            overflow: hidden;
+            overflow-y: auto; overflow-x: hidden;
         }
+        #right::-webkit-scrollbar { width: 3px; }
+        #right::-webkit-scrollbar-track { background: transparent; }
+        #right::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
         #main.right-collapsed #right {
             opacity: 0; pointer-events: none; border-left-width: 0;
         }
@@ -320,25 +326,25 @@
 
         /* ─── CENTER ─── */
         #center {
-            display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+            display: flex; flex-direction: column; min-height: 0;
+            overflow-y: auto; overflow-x: hidden;
         }
+        #center::-webkit-scrollbar { width: 3px; }
+        #center::-webkit-scrollbar-track { background: transparent; }
+        #center::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
         #watchlist-area {
             flex-shrink: 0;
             padding: 12px 14px 0;
         }
         #chart-area {
-            flex: 1;
             padding: 10px 14px 0;
             display: flex; flex-direction: column;
-            min-height: 0;
         }
         .chart-box {
-            flex: 1;
             background: var(--bg-2);
             border: 1px solid var(--border);
             border-radius: 8px;
             overflow: hidden;
-            min-height: 0;
             display: flex; flex-direction: column;
         }
         .chart-toolbar {
@@ -349,8 +355,9 @@
         }
         .chart-btns { display: flex; gap: 5px; flex-wrap: wrap; }
         #tradingview-main {
-            height: calc(100vh - 490px);
-            min-height: 320px;
+            height: calc(100vh - 420px);
+            min-height: 400px;
+            max-height: 700px;
             width: 100%;
         }
 
@@ -1040,6 +1047,8 @@
                 {"proName":"AMEX:SPY","title":"SPY"},
                 {"proName":"NASDAQ:QQQ","title":"QQQ"},
                 {"proName":"AMEX:BOTZ","title":"BOTZ"},
+                {"proName":"BITSTAMP:BTCUSD","title":"BTC"},
+                {"proName":"BITSTAMP:ETHUSD","title":"ETH"},
                 {"proName":"FOREXCOM:AUDUSD","title":"AUD/USD"},
                 {"proName":"TVC:GOLD","title":"GOLD"},
                 {"proName":"TVC:USOIL","title":"OIL (WTI)"},
@@ -1062,7 +1071,7 @@
     <div class="logo">
         <div class="logo-mark">📈</div>
         <div class="logo-text">
-            <div class="title">Personal Trading Dashboard</div>
+            <div class="title">AI Tech Focused Trading Dashboard</div>
             <div class="sub">Brisbane, Australia · Research &amp; Analysis Only — Not Financial Advice</div>
         </div>
     </div>
@@ -1072,15 +1081,19 @@
             <span class="pill-value" id="hdr-audusd">—</span>
         </div>
         <div class="pill">
+            <span class="pill-label">BTC</span>
+            <span class="pill-value mono" id="hdr-btc">—</span>
+        </div>
+        <div class="pill">
+            <span class="pill-label">ETH</span>
+            <span class="pill-value mono" id="hdr-eth">—</span>
+        </div>
+        <div class="pill">
             <span class="pill-label">S&amp;P 500</span>
             <span class="pill-value c-red">~6,378</span>
         </div>
         <div class="pill">
-            <span class="pill-label">Brent Crude</span>
-            <span class="pill-value c-red">~$111</span>
-        </div>
-        <div class="pill">
-            <span class="pill-label">Gold (Hold)</span>
+            <span class="pill-label">Gold</span>
             <span class="pill-value c-gold">~$3,100</span>
         </div>
         <div class="pill">
@@ -1572,12 +1585,33 @@
         <!-- News filter -->
         <div class="right-filter-bar" id="news-filter-row">
             <button class="btn active" style="padding:3px 8px;font-size:10px" onclick="setFilter('all',this)">All</button>
+            <button class="btn" style="padding:3px 8px;font-size:10px" onclick="setFilter('reddit',this)">Reddit</button>
             <button class="btn" style="padding:3px 8px;font-size:10px" onclick="setFilter('tech',this)">Tech</button>
             <button class="btn" style="padding:3px 8px;font-size:10px" onclick="setFilter('macro',this)">Macro</button>
             <button class="btn" style="padding:3px 8px;font-size:10px" onclick="setFilter('ai',this)">AI/Chips</button>
         </div>
 
-        <!-- News feed -->
+        <!-- TradingView News Timeline -->
+        <div id="tv-news-wrap" style="height:300px;border-bottom:1px solid var(--border)">
+            <div class="tradingview-widget-container" style="height:100%;width:100%">
+                <div class="tradingview-widget-container__widget"></div>
+                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js" async>
+                {
+                    "feedMode": "market",
+                    "market": "stock",
+                    "isTransparent": true,
+                    "displayMode": "compact",
+                    "width": "100%",
+                    "height": "100%",
+                    "colorTheme": "dark",
+                    "locale": "en"
+                }
+                </script>
+            </div>
+        </div>
+
+        <!-- RSS + Reddit feed -->
+        <div style="padding:8px 10px 0"><span class="sec-label" style="margin-bottom:0">Reddit &amp; RSS</span></div>
         <div id="news-feed">
             <div class="news-loading">Loading market news…</div>
         </div>
@@ -2840,6 +2874,25 @@ async function fetchAUDUSD() {
     }
 }
 
+async function fetchCrypto() {
+    try {
+        const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
+        const d = await r.json();
+        if (d.bitcoin) {
+            const btcEl = document.getElementById('hdr-btc');
+            const chg = d.bitcoin.usd_24h_change;
+            btcEl.textContent = '$' + Math.round(d.bitcoin.usd).toLocaleString();
+            btcEl.className = 'pill-value mono ' + (chg >= 0 ? 'c-green' : 'c-red');
+        }
+        if (d.ethereum) {
+            const ethEl = document.getElementById('hdr-eth');
+            const chg = d.ethereum.usd_24h_change;
+            ethEl.textContent = '$' + Math.round(d.ethereum.usd).toLocaleString();
+            ethEl.className = 'pill-value mono ' + (chg >= 0 ? 'c-green' : 'c-red');
+        }
+    } catch(e) {}
+}
+
 // ─────────────────────────────────────────────────────────
 // NEWS FEED
 // ─────────────────────────────────────────────────────────
@@ -2847,15 +2900,17 @@ let cachedNews = [];
 let newsFilter = 'all';
 
 const FEEDS = [
-    { url: 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=NVDA,MSFT,AMZN,TSM,ORCL&region=US&lang=en-US', name: 'Yahoo Finance' },
-    { url: 'https://feeds.finance.yahoo.com/rss/2.0/headline?s=META,PLTR,AVGO,AMD,ARM,CRWD&region=US&lang=en-US', name: 'Yahoo Finance' },
-    { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', name: 'CNBC Markets' },
+    // Reddit — AI, stocks, tech investing communities
+    { url: 'https://www.reddit.com/r/wallstreetbets/.rss', name: 'r/wallstreetbets' },
+    { url: 'https://www.reddit.com/r/stocks/.rss', name: 'r/stocks' },
+    { url: 'https://www.reddit.com/r/investing/.rss', name: 'r/investing' },
+    { url: 'https://www.reddit.com/r/artificial/.rss', name: 'r/artificial' },
+    { url: 'https://www.reddit.com/r/nvidia/.rss', name: 'r/nvidia' },
+    { url: 'https://www.reddit.com/r/semiconductors/.rss', name: 'r/semiconductors' },
+    // Market news
     { url: 'https://www.cnbc.com/id/19854910/device/rss/rss.html', name: 'CNBC Tech' },
-    { url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10001147', name: 'CNBC Top' },
+    { url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html', name: 'CNBC Markets' },
     { url: 'https://www.marketwatch.com/rss/topstories', name: 'MarketWatch' },
-    { url: 'https://feeds.reuters.com/reuters/businessNews', name: 'Reuters' },
-    { url: 'https://feeds.reuters.com/reuters/technologyNews', name: 'Reuters Tech' },
-    { url: 'https://feeds.bbci.co.uk/news/business/rss.xml', name: 'BBC Business' },
 ];
 const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
 
@@ -2940,26 +2995,7 @@ async function fetchNews() {
     const now = new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
 
     if (cachedNews.length === 0) {
-        // Fallback: TradingView news timeline widget
-        document.getElementById('news-feed').innerHTML = '';
-        const wrap = document.createElement('div');
-        wrap.className = 'tradingview-widget-container';
-        wrap.style.cssText = 'height:100%;width:100%';
-        const inner = document.createElement('div');
-        inner.className = 'tradingview-widget-container__widget';
-        wrap.appendChild(inner);
-        const scr = document.createElement('script');
-        scr.type = 'text/javascript';
-        scr.src = 'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js';
-        scr.async = true;
-        scr.textContent = JSON.stringify({
-            "feedMode": "market", "market": "stock",
-            "isTransparent": true, "displayMode": "compact",
-            "width": "100%", "height": "100%",
-            "colorTheme": "dark", "locale": "en"
-        });
-        wrap.appendChild(scr);
-        document.getElementById('news-feed').appendChild(wrap);
+        document.getElementById('news-feed').innerHTML = '<div class="news-loading">No RSS/Reddit results — see TradingView feed above</div>';
         populateAlertBar([]);
         return;
     }
@@ -2975,6 +3011,8 @@ function renderNews() {
 
     const filtered = newsFilter === 'all'
         ? cachedNews
+        : newsFilter === 'reddit'
+        ? cachedNews.filter(n => n.source.startsWith('r/'))
         : cachedNews.filter(n => n.cat === newsFilter);
 
     if (filtered.length === 0) {
@@ -3272,6 +3310,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     fetchAUDUSD();
     setInterval(fetchAUDUSD, 5 * 60 * 1000);
+
+    fetchCrypto();
+    setInterval(fetchCrypto, 60 * 1000);
 
     fetchNews();
     setInterval(fetchNews, 2 * 60 * 1000);
