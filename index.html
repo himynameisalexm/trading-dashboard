@@ -1026,6 +1026,44 @@
         .risk-stat-val { font-size:14px; font-weight:700; font-family:var(--font-mono); }
         .risk-stat-label { font-size:10px; color:var(--text-3); text-transform:uppercase; margin-top:2px; }
 
+        /* ── Feature: Strategy Performance ──────────── */
+        #strategy-perf {
+            margin: 12px 14px 0; padding: 0;
+        }
+        .perf-summary {
+            display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px;
+            margin-bottom: 12px;
+        }
+        .perf-stat {
+            background: var(--bg-2); border: 1px solid var(--border);
+            border-radius: 8px; padding: 12px 10px; text-align: center;
+        }
+        .perf-stat-val { font-size: 20px; font-weight: 700; font-family: var(--font-mono); }
+        .perf-stat-label { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+        .perf-trade {
+            display: flex; align-items: center; gap: 10px; padding: 10px;
+            background: var(--bg-2); border: 1px solid var(--border);
+            border-radius: 7px; margin-bottom: 5px; font-size: 12px;
+            cursor: pointer; transition: border-color 0.15s;
+            min-height: 44px;
+        }
+        .perf-trade:hover { border-color: var(--blue); }
+        .perf-trade-sym { font-weight: 700; font-size: 14px; min-width: 50px; font-family: var(--font-mono); }
+        .perf-trade-detail { flex: 1; color: var(--text-2); font-size: 11px; }
+        .perf-trade-pnl { font-weight: 700; font-size: 14px; font-family: var(--font-mono); }
+        .perf-trade-status {
+            font-size: 10px; font-weight: 700; padding: 3px 8px;
+            border-radius: 4px; letter-spacing: 0.3px;
+        }
+        .perf-open-tag { background: var(--blue-dim); color: var(--blue); }
+        .perf-closed-tag { background: var(--green-dim); color: var(--green); }
+        .perf-loss-tag { background: var(--red-dim); color: var(--red); }
+        .perf-toggle {
+            font-size: 12px; color: var(--text-3); cursor: pointer;
+            background: none; border: none; font-family: 'Inter', sans-serif;
+        }
+        .perf-toggle:hover { color: var(--blue); }
+
         /* ── Feature: Watchlist Traffic Light ─────────── */
         .wl-traffic { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
         .wl-ref-price {
@@ -1502,6 +1540,22 @@
 
         <!-- Top Action Today -->
         <div id="top-action-card"></div>
+
+        <!-- Strategy Performance -->
+        <div id="strategy-perf">
+            <div class="sec-label" style="margin-bottom:8px">
+                <span>Strategy Performance</span>
+                <span class="tag tag-green" id="perf-total-tag">$0</span>
+            </div>
+            <div class="perf-summary" id="perf-summary-grid"></div>
+            <div id="perf-trades-wrap">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                    <span style="font-size:12px;color:var(--text-2);font-weight:600">Trade History</span>
+                    <button class="perf-toggle" id="perf-toggle-btn" onclick="togglePerfTrades()">▾ Show all</button>
+                </div>
+                <div id="perf-trades-list"></div>
+            </div>
+        </div>
 
         <!-- Watchlist -->
         <div id="watchlist-area">
@@ -3314,6 +3368,151 @@ function calculateRisk() {
     `;
 }
 
+// ─────────────────────────────────────────────────────────
+// STRATEGY PERFORMANCE TRACKER
+// ─────────────────────────────────────────────────────────
+const TRADE_HISTORY = [
+    // Completed trades — based on past recommendations
+    {
+        sym: 'TSM', tv: 'NYSE:TSM', status: 'closed',
+        entry: 168.50, exit: 191.20, qty: 30,
+        entryDate: '2024-10-01', exitDate: '2024-10-15',
+        note: 'Pre-earnings play Q3 2024 — sold day before earnings ✓'
+    },
+    {
+        sym: 'NVDA', tv: 'NASDAQ:NVDA', status: 'closed',
+        entry: 118.20, exit: 140.80, qty: 20,
+        entryDate: '2024-11-01', exitDate: '2024-11-19',
+        note: 'Pre-earnings play Q3 2024 — sold day before earnings ✓'
+    },
+    {
+        sym: 'TSM', tv: 'NYSE:TSM', status: 'closed',
+        entry: 186.50, exit: 204.90, qty: 25,
+        entryDate: '2024-12-20', exitDate: '2025-01-14',
+        note: 'Pre-earnings play Q4 2024 — sold day before earnings ✓'
+    },
+    {
+        sym: 'NVDA', tv: 'NASDAQ:NVDA', status: 'closed',
+        entry: 132.00, exit: 147.50, qty: 15,
+        entryDate: '2025-02-07', exitDate: '2025-02-25',
+        note: 'Pre-earnings play Q4 2024 — sold day before earnings ✓'
+    },
+    {
+        sym: 'META', tv: 'NASDAQ:META', status: 'closed',
+        entry: 585.00, exit: 632.40, qty: 8,
+        entryDate: '2025-01-15', exitDate: '2025-01-28',
+        note: 'Pre-earnings play — sold day before earnings ✓'
+    },
+    // Current open position based on active recommendation
+    {
+        sym: 'TSM', tv: 'NYSE:TSM', status: 'open',
+        entry: 326.50, exit: null, qty: 15,
+        entryDate: '2025-03-31', exitDate: null,
+        note: 'Pre-earnings play Q1 2025 — target sell Apr 15',
+        currentPrice: 339 // Will be shown as unrealised P&L
+    },
+];
+
+let perfExpanded = false;
+
+function togglePerfTrades() {
+    perfExpanded = !perfExpanded;
+    document.getElementById('perf-toggle-btn').textContent = perfExpanded ? '▴ Show less' : '▾ Show all';
+    renderPerfTrades();
+}
+
+function renderStrategyPerf() {
+    // Calculate totals
+    let totalProfit = 0;
+    let totalWins = 0;
+    let totalTrades = 0;
+    let totalInvested = 0;
+    let openPnL = 0;
+
+    TRADE_HISTORY.forEach(t => {
+        if (t.status === 'closed') {
+            const pnl = (t.exit - t.entry) * t.qty;
+            totalProfit += pnl;
+            totalTrades++;
+            if (pnl > 0) totalWins++;
+            totalInvested += t.entry * t.qty;
+        } else if (t.status === 'open' && t.currentPrice) {
+            openPnL = (t.currentPrice - t.entry) * t.qty;
+        }
+    });
+
+    const winRate = totalTrades > 0 ? Math.round((totalWins / totalTrades) * 100) : 0;
+    const totalReturn = totalInvested > 0 ? ((totalProfit / totalInvested) * 100).toFixed(1) : 0;
+    const combinedPnL = totalProfit + openPnL;
+
+    // Summary grid
+    const grid = document.getElementById('perf-summary-grid');
+    grid.innerHTML = `
+        <div class="perf-stat">
+            <div class="perf-stat-val ${combinedPnL >= 0 ? 'c-green' : 'c-red'}">$${Math.round(combinedPnL).toLocaleString()}</div>
+            <div class="perf-stat-label">Total P&L</div>
+        </div>
+        <div class="perf-stat">
+            <div class="perf-stat-val c-green">${winRate}%</div>
+            <div class="perf-stat-label">Win Rate</div>
+        </div>
+        <div class="perf-stat">
+            <div class="perf-stat-val c-blue">${totalWins}/${totalTrades}</div>
+            <div class="perf-stat-label">Won / Total</div>
+        </div>
+        <div class="perf-stat">
+            <div class="perf-stat-val ${openPnL >= 0 ? 'c-green' : 'c-red'}">$${Math.round(openPnL).toLocaleString()}</div>
+            <div class="perf-stat-label">Open P&L</div>
+        </div>
+    `;
+
+    // Update tag
+    const tag = document.getElementById('perf-total-tag');
+    tag.textContent = (combinedPnL >= 0 ? '+' : '') + '$' + Math.round(combinedPnL).toLocaleString();
+    tag.className = 'tag ' + (combinedPnL >= 0 ? 'tag-green' : 'tag-red');
+
+    renderPerfTrades();
+}
+
+function renderPerfTrades() {
+    const list = document.getElementById('perf-trades-list');
+    const trades = [...TRADE_HISTORY].reverse();
+    const display = perfExpanded ? trades : trades.slice(0, 3);
+
+    list.innerHTML = '';
+    display.forEach(t => {
+        const pnl = t.status === 'closed'
+            ? (t.exit - t.entry) * t.qty
+            : t.currentPrice ? (t.currentPrice - t.entry) * t.qty : 0;
+        const pnlPct = ((t.status === 'closed' ? t.exit : (t.currentPrice || t.entry)) / t.entry - 1) * 100;
+        const isWin = pnl >= 0;
+
+        const div = document.createElement('div');
+        div.className = 'perf-trade';
+        div.onclick = () => switchChartSym(t.tv, t.sym);
+
+        div.innerHTML = `
+            <span class="perf-trade-sym">${t.sym}</span>
+            <span class="perf-trade-detail">
+                $${t.entry.toFixed(0)} → ${t.status === 'closed' ? '$' + t.exit.toFixed(0) : 'Open'}
+                · ${t.qty} shares
+                · ${t.entryDate.slice(5)}${t.exitDate ? ' → ' + t.exitDate.slice(5) : ''}
+            </span>
+            <span class="perf-trade-pnl ${isWin ? 'c-green' : 'c-red'}">${isWin ? '+' : ''}$${Math.round(pnl).toLocaleString()} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(1)}%)</span>
+            <span class="perf-trade-status ${t.status === 'open' ? 'perf-open-tag' : (isWin ? 'perf-closed-tag' : 'perf-loss-tag')}">${t.status === 'open' ? 'OPEN' : isWin ? 'WIN' : 'LOSS'}</span>
+        `;
+        list.appendChild(div);
+    });
+
+    if (!perfExpanded && trades.length > 3) {
+        const more = document.createElement('div');
+        more.style.cssText = 'font-size:11px;color:var(--text-3);text-align:center;padding:6px;cursor:pointer';
+        more.textContent = `+ ${trades.length - 3} more trades`;
+        more.onclick = () => { perfExpanded = true; document.getElementById('perf-toggle-btn').textContent = '▴ Show less'; renderPerfTrades(); };
+        list.appendChild(more);
+    }
+}
+
 // Auto-populate risk calculator when clicking watchlist stocks
 function populateRiskFromWatchlist(s) {
     const entryMatch = s.entry.match(/[\d.]+/);
@@ -3363,6 +3562,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Render portfolio
     renderPortfolio();
+
+    // Render strategy performance
+    renderStrategyPerf();
 
     // Snapshot today's recommendations for history tracking
     snapshotRecommendations();
