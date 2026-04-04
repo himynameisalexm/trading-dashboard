@@ -920,6 +920,99 @@
         .wl-sug-empty {
             padding: 16px; text-align: center; font-size: 11px; color: var(--text-3);
         }
+
+        /* ── Feature: Top Action Today ───────────────── */
+        #top-action-card {
+            margin: 10px 14px 0; padding: 14px 16px;
+            background: linear-gradient(135deg, rgba(63,185,80,0.08), rgba(88,166,255,0.06));
+            border: 1px solid rgba(63,185,80,0.3); border-radius: 10px;
+            position: relative; overflow: hidden;
+        }
+        #top-action-card::before {
+            content:''; position:absolute; left:0; top:0; bottom:0; width:4px;
+            background: var(--green);
+        }
+        .ta-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+        .ta-label { font-size:8px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+            background:var(--green); color:#fff; padding:2px 8px; border-radius:3px; }
+        .ta-sym { font-size:20px; font-weight:800; color:var(--text-1); font-family:var(--font-mono); }
+        .ta-rec { font-size:11px; font-weight:700; padding:3px 10px; border-radius:4px; }
+        .ta-body { font-size:12px; color:var(--text-2); line-height:1.6; }
+        .ta-body strong { color:var(--text-1); }
+        .ta-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:10px; }
+        .ta-metric { text-align:center; padding:6px; background:rgba(0,0,0,0.2); border-radius:6px; }
+        .ta-metric-val { font-size:14px; font-weight:700; font-family:var(--font-mono); }
+        .ta-metric-label { font-size:8px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.5px; }
+        .ta-none { font-size:11px; color:var(--text-3); text-align:center; padding:12px; }
+
+        /* ── Feature: Chart Mode Toggle ──────────────── */
+        .chart-mode-toggle {
+            display:flex; gap:2px; background:var(--bg-3); border-radius:5px; padding:2px;
+            border:1px solid var(--border); margin-right:8px; flex-shrink:0;
+        }
+        .chart-mode-toggle .btn { padding:3px 10px; font-size:9px; border-radius:3px; }
+
+        /* ── Feature: Learning Section ───────────────── */
+        .learn-item { padding:8px 0; border-bottom:1px solid var(--border-light); }
+        .learn-item:last-child { border-bottom:none; }
+        .learn-q { font-size:11px; font-weight:600; color:var(--blue); margin-bottom:3px; }
+        .learn-a { font-size:10px; color:var(--text-2); line-height:1.6; }
+
+        /* ── Feature: Portfolio Tracking ─────────────── */
+        #portfolio-area { padding:0 14px; }
+        .pf-form { display:flex; gap:5px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+        .pf-form input, .pf-form select {
+            background:var(--bg-3); border:1px solid var(--border); border-radius:5px;
+            color:var(--text-1); padding:6px 8px; font-size:11px; outline:none;
+            font-family:var(--font-sans);
+        }
+        .pf-form input:focus, .pf-form select:focus { border-color:var(--blue); }
+        .pf-form input[type=number] { width:70px; }
+        .pf-form select { width:70px; }
+        .pf-form .pf-add-btn {
+            background:var(--green); border:none; border-radius:5px; color:#fff;
+            padding:6px 12px; font-size:10px; font-weight:600; cursor:pointer;
+        }
+        .pf-holding {
+            display:flex; align-items:center; gap:8px; padding:7px 8px;
+            background:var(--bg-3); border:1px solid var(--border); border-radius:6px;
+            margin-bottom:4px; font-size:11px;
+        }
+        .pf-holding-sym { font-weight:700; color:var(--blue); min-width:42px; font-family:var(--font-mono); }
+        .pf-holding-detail { flex:1; color:var(--text-2); font-size:10px; }
+        .pf-pnl { font-weight:700; font-family:var(--font-mono); font-size:11px; }
+        .pf-remove { background:none; border:none; color:var(--red); cursor:pointer; font-size:12px; opacity:0.5; }
+        .pf-remove:hover { opacity:1; }
+        .pf-summary {
+            display:flex; justify-content:space-between; padding:8px;
+            background:var(--bg-3); border:1px solid var(--border); border-radius:6px;
+            margin-top:6px; font-size:11px;
+        }
+        .pf-empty { font-size:10px; color:var(--text-3); text-align:center; padding:10px; }
+
+        /* ── Feature: Risk Calculator ────────────────── */
+        .risk-row { display:flex; gap:6px; align-items:center; margin-bottom:6px; }
+        .risk-row label { font-size:10px; color:var(--text-3); min-width:65px; }
+        .risk-row input, .risk-row select {
+            flex:1; background:var(--bg-3); border:1px solid var(--border); border-radius:5px;
+            color:var(--text-1); padding:6px 8px; font-size:11px; outline:none;
+        }
+        .risk-row input:focus, .risk-row select:focus { border-color:var(--blue); }
+        #risk-result { margin-top:8px; }
+        .risk-result-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+        .risk-stat {
+            background:var(--bg-3); border-radius:5px; padding:8px; text-align:center;
+            border:1px solid var(--border);
+        }
+        .risk-stat-val { font-size:14px; font-weight:700; font-family:var(--font-mono); }
+        .risk-stat-label { font-size:8px; color:var(--text-3); text-transform:uppercase; margin-top:2px; }
+
+        /* ── Feature: Watchlist Traffic Light ─────────── */
+        .wl-traffic { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+        .wl-ref-price {
+            font-size:16px; font-weight:700; font-family:var(--font-mono);
+            margin:6px 0 4px; text-align:center;
+        }
     </style>
 </head>
 <body>
@@ -1311,10 +1404,79 @@
             </div>
         </div>
 
+        <!-- Risk Calculator -->
+        <div>
+            <div class="sec-label">
+                <span>Position Size Calculator</span>
+                <span class="tag tag-blue">Risk Mgmt</span>
+            </div>
+            <div class="card">
+                <div class="risk-row">
+                    <label>Account $</label>
+                    <input type="number" id="risk-account" placeholder="e.g. 10000" value="10000">
+                </div>
+                <div class="risk-row">
+                    <label>Risk %</label>
+                    <input type="number" id="risk-pct" placeholder="e.g. 2" value="2" min="0.1" max="100" step="0.1">
+                </div>
+                <div class="risk-row">
+                    <label>Entry $</label>
+                    <input type="number" id="risk-entry" placeholder="Entry price">
+                </div>
+                <div class="risk-row">
+                    <label>Stop $</label>
+                    <input type="number" id="risk-stop" placeholder="Stop loss">
+                </div>
+                <button class="btn" style="width:100%;margin-top:4px;padding:6px;font-size:10px;background:var(--blue);color:#fff;border:none;border-radius:5px;cursor:pointer" onclick="calculateRisk()">Calculate Position Size</button>
+                <div id="risk-result"></div>
+            </div>
+        </div>
+
+        <!-- Learning Section -->
+        <div>
+            <div class="sec-label" style="cursor:pointer" onclick="toggleLearning()">
+                <span>📚 Learn Trading Basics</span>
+                <span id="learn-toggle" style="font-size:10px;color:var(--text-3)">▾ Show</span>
+            </div>
+            <div id="learning-section" class="card" style="display:none">
+                <div class="learn-item">
+                    <div class="learn-q">What is a Stop Loss?</div>
+                    <div class="learn-a">A price you set to automatically sell if the stock drops — it limits your loss. Example: You buy at $100, set stop at $90. If it drops to $90, you sell and lose only 10% instead of more.</div>
+                </div>
+                <div class="learn-item">
+                    <div class="learn-q">What does "Pre-Earnings Play" mean?</div>
+                    <div class="learn-a">Stocks often rise 2-3 weeks before earnings reports as excitement builds. The strategy: buy the run-up, sell the day BEFORE the report. You capture the anticipation without the risk of a bad surprise.</div>
+                </div>
+                <div class="learn-item">
+                    <div class="learn-q">What is MACD?</div>
+                    <div class="learn-a">Moving Average Convergence Divergence — it shows momentum. When the MACD line crosses above the signal line, it's bullish (good). Below = bearish. Think of it as "is this stock gaining or losing steam?"</div>
+                </div>
+                <div class="learn-item">
+                    <div class="learn-q">What is RSI?</div>
+                    <div class="learn-a">Relative Strength Index (0-100). Above 70 = "overbought" (might drop soon). Below 30 = "oversold" (might bounce). It helps you avoid buying at the top or selling at the bottom.</div>
+                </div>
+                <div class="learn-item">
+                    <div class="learn-q">What are Bollinger Bands?</div>
+                    <div class="learn-a">Two bands around the price that show volatility. When price touches the upper band, it might be overextended. Lower band = potentially cheap. Bands squeezing tight = a big move is coming.</div>
+                </div>
+                <div class="learn-item">
+                    <div class="learn-q">What does "Long Only" mean?</div>
+                    <div class="learn-a">You can only make money when stocks go UP. You buy shares, hope they rise, then sell for profit. The opposite (shorting) bets stocks go down — Stake doesn't allow shorting.</div>
+                </div>
+                <div class="learn-item">
+                    <div class="learn-q">Why sell BEFORE earnings?</div>
+                    <div class="learn-a">Even great companies can drop 10-20% after earnings if results don't beat sky-high expectations. By selling before, you bank the run-up profit with zero earnings-night risk.</div>
+                </div>
+            </div>
+        </div>
+
     </div><!-- /left -->
 
     <!-- ────────────────── CENTER ────────────────── -->
     <div id="center">
+
+        <!-- Top Action Today -->
+        <div id="top-action-card"></div>
 
         <!-- Watchlist -->
         <div id="watchlist-area">
@@ -1342,6 +1504,10 @@
         <div id="chart-area">
             <div class="chart-box">
                 <div class="chart-toolbar">
+                    <div class="chart-mode-toggle">
+                        <button class="btn active" onclick="setChartMode('simple',this)">Simple</button>
+                        <button class="btn" onclick="setChartMode('pro',this)">Pro</button>
+                    </div>
                     <div class="chart-btns" id="chart-btns">
                         <!-- Built dynamically from watchlist -->
                     </div>
@@ -1356,6 +1522,29 @@
                     </div>
                 </div>
                 <div id="tradingview-main"></div>
+            </div>
+        </div>
+
+        <!-- Portfolio Tracking -->
+        <div id="portfolio-area">
+            <div class="sec-label" style="margin-bottom:8px">
+                <span>My Portfolio</span>
+                <span class="tag tag-green" id="pf-total-tag">$0</span>
+            </div>
+            <div class="pf-form">
+                <input type="text" id="pf-sym" placeholder="Ticker" style="width:60px;text-transform:uppercase">
+                <input type="number" id="pf-qty" placeholder="Qty" min="1">
+                <input type="number" id="pf-price" placeholder="Avg Price" min="0" step="0.01">
+                <select id="pf-currency">
+                    <option value="USD">USD</option>
+                    <option value="AUD">AUD</option>
+                </select>
+                <button class="pf-add-btn" onclick="addHolding()">+ Add</button>
+            </div>
+            <div id="pf-holdings"></div>
+            <div id="pf-summary" style="display:none" class="pf-summary">
+                <span>Total Invested: <strong id="pf-invested" class="mono">$0</strong></span>
+                <span>Holdings: <strong id="pf-count">0</strong></span>
             </div>
         </div>
 
@@ -2461,6 +2650,7 @@ function buildWatchlist() {
             card.classList.add('wl-selected');
             card.style.borderColor = 'var(--blue)';
             switchChartSym(s.tv, s.sym);
+            if (s.entry && s.stop) populateRiskFromWatchlist(s);
         };
 
         const confBar = s.confidence
@@ -2474,15 +2664,19 @@ function buildWatchlist() {
         card.innerHTML = `
             <button class="wl-card-remove" onclick="event.stopPropagation();removeFromWatchlist('${s.sym}')" title="Remove ${s.sym}">✕</button>
             <div class="wl-head">
-                <div>
-                    <div class="wl-sym">${s.sym}</div>
-                    <div class="wl-name">${s.name}</div>
+                <div style="display:flex;align-items:center;gap:6px">
+                    <div class="wl-traffic" style="background:${col}"></div>
+                    <div>
+                        <div class="wl-sym">${s.sym}</div>
+                        <div class="wl-name">${s.name}</div>
+                    </div>
                 </div>
                 <div style="text-align:right">
                     <span class="tc-badge ${STATUS_BADGE[s.status]}">${s.label}</span>
                     <div style="font-size:8px;color:var(--text-3);margin-top:3px">${s.theme}</div>
                 </div>
             </div>
+            <div class="wl-ref-price" style="color:${col}">$${s.refPrice}</div>
             <div class="wl-rows">
                 <div class="wl-row">
                     <div class="wl-rl">12M Target</div>
@@ -2518,6 +2712,10 @@ function initChart(sym) {
     const container = document.getElementById('tradingview-main');
     container.innerHTML = '';
 
+    const studies = chartMode === 'pro'
+        ? ['MACD@tv-basicstudies','RSI@tv-basicstudies','BB@tv-basicstudies','MASimple@tv-basicstudies']
+        : ['MASimple@tv-basicstudies'];
+
     new TradingView.widget({
         container_id: 'tradingview-main',
         autosize: true,
@@ -2530,14 +2728,9 @@ function initChart(sym) {
         toolbar_bg: '#161b22',
         enable_publishing: false,
         allow_symbol_change: true,
-        hide_side_toolbar: false,
+        hide_side_toolbar: chartMode === 'simple',
         withdateranges: true,
-        studies: [
-            'MACD@tv-basicstudies',
-            'RSI@tv-basicstudies',
-            'BB@tv-basicstudies',
-            'MASimple@tv-basicstudies'
-        ]
+        studies: studies
     });
 }
 
@@ -2850,6 +3043,216 @@ function setFilter(cat, btn) {
 }
 
 // ─────────────────────────────────────────────────────────
+// TOP ACTION TODAY
+// ─────────────────────────────────────────────────────────
+function buildTopAction() {
+    const card = document.getElementById('top-action-card');
+    if (!card) return;
+
+    // Find the best actionable stock from WATCHLIST
+    const active = WATCHLIST.find(s => s.status === 'active');
+    if (!active) {
+        const waiting = WATCHLIST.find(s => s.status === 'wait');
+        if (waiting) {
+            card.innerHTML = `
+                <div class="ta-header">
+                    <span class="ta-label" style="background:var(--gold)">NEXT UP</span>
+                    <span class="ta-sym">${waiting.sym}</span>
+                    <span class="ta-rec" style="background:var(--gold-dim);color:var(--gold)">${waiting.label}</span>
+                </div>
+                <div class="ta-body">${waiting.note}. Watch for entry signal at <strong>${waiting.entry}</strong>.</div>
+            `;
+            card.style.borderColor = 'rgba(210,153,34,0.3)';
+            card.querySelector('.ta-label').style.background = 'var(--gold)';
+            card.style.background = 'linear-gradient(135deg, rgba(210,153,34,0.08), rgba(88,166,255,0.04))';
+            if (card.querySelector('::before')) card.style.setProperty('--ta-bar', 'var(--gold)');
+        } else {
+            card.innerHTML = '<div class="ta-none">No active trades right now. Check watchlist for upcoming opportunities.</div>';
+        }
+        return;
+    }
+
+    const insight = INSIGHTS[active.tv] || {};
+    card.innerHTML = `
+        <div class="ta-header">
+            <span class="ta-label">TOP ACTION TODAY</span>
+            <span class="ta-sym">${active.sym}</span>
+            <span class="ta-rec" style="background:var(--green-dim);color:var(--green)">${insight.rec || active.label}</span>
+        </div>
+        <div class="ta-body">
+            <strong>${active.name}</strong> — ${active.note}
+            ${insight.holdPeriod ? `<br>Hold: <strong>${insight.holdPeriod}</strong> · Target: <strong>${insight.stTarget || '$'+active.target}</strong> (+${insight.stReturn || active.upside+'%'})` : ''}
+        </div>
+        <div class="ta-grid">
+            <div class="ta-metric">
+                <div class="ta-metric-val c-blue">${active.entry}</div>
+                <div class="ta-metric-label">Entry</div>
+            </div>
+            <div class="ta-metric">
+                <div class="ta-metric-val c-green">$${active.target}</div>
+                <div class="ta-metric-label">Target</div>
+            </div>
+            <div class="ta-metric">
+                <div class="ta-metric-val c-red">${active.stop}</div>
+                <div class="ta-metric-label">Stop Loss</div>
+            </div>
+        </div>
+    `;
+    card.style.cursor = 'pointer';
+    card.onclick = () => switchChartSym(active.tv, active.sym);
+}
+
+// ─────────────────────────────────────────────────────────
+// CHART MODE (Simple / Pro)
+// ─────────────────────────────────────────────────────────
+let chartMode = localStorage.getItem('chartMode') || 'simple';
+
+function setChartMode(mode, btn) {
+    chartMode = mode;
+    localStorage.setItem('chartMode', mode);
+    document.querySelectorAll('.chart-mode-toggle .btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    initChart(currentSym);
+}
+
+// ─────────────────────────────────────────────────────────
+// LEARNING SECTION
+// ─────────────────────────────────────────────────────────
+let learningOpen = false;
+function toggleLearning() {
+    learningOpen = !learningOpen;
+    const sec = document.getElementById('learning-section');
+    const tog = document.getElementById('learn-toggle');
+    sec.style.display = learningOpen ? '' : 'none';
+    tog.textContent = learningOpen ? '▴ Hide' : '▾ Show';
+}
+
+// ─────────────────────────────────────────────────────────
+// PORTFOLIO TRACKING
+// ─────────────────────────────────────────────────────────
+function getPortfolio() {
+    try { return JSON.parse(localStorage.getItem('portfolio') || '[]'); }
+    catch { return []; }
+}
+function savePortfolio(p) { localStorage.setItem('portfolio', JSON.stringify(p)); }
+
+function addHolding() {
+    const sym = document.getElementById('pf-sym').value.trim().toUpperCase();
+    const qty = parseFloat(document.getElementById('pf-qty').value);
+    const price = parseFloat(document.getElementById('pf-price').value);
+    const currency = document.getElementById('pf-currency').value;
+    if (!sym || !qty || !price) return;
+
+    const portfolio = getPortfolio();
+    portfolio.push({ sym, qty, price, currency, addedAt: new Date().toISOString() });
+    savePortfolio(portfolio);
+
+    document.getElementById('pf-sym').value = '';
+    document.getElementById('pf-qty').value = '';
+    document.getElementById('pf-price').value = '';
+    renderPortfolio();
+}
+
+function removeHolding(index) {
+    const portfolio = getPortfolio();
+    portfolio.splice(index, 1);
+    savePortfolio(portfolio);
+    renderPortfolio();
+}
+
+function renderPortfolio() {
+    const portfolio = getPortfolio();
+    const container = document.getElementById('pf-holdings');
+    const summary = document.getElementById('pf-summary');
+
+    if (portfolio.length === 0) {
+        container.innerHTML = '<div class="pf-empty">No holdings yet. Add your first position above.</div>';
+        summary.style.display = 'none';
+        document.getElementById('pf-total-tag').textContent = '$0';
+        return;
+    }
+
+    let totalInvested = 0;
+    container.innerHTML = '';
+    portfolio.forEach((h, i) => {
+        const cost = h.qty * h.price;
+        totalInvested += cost;
+        const div = document.createElement('div');
+        div.className = 'pf-holding';
+        div.innerHTML = `
+            <span class="pf-holding-sym">${h.sym}</span>
+            <span class="pf-holding-detail">${h.qty} shares @ ${h.currency === 'AUD' ? 'A' : ''}$${h.price.toFixed(2)}</span>
+            <span class="pf-pnl mono">${h.currency === 'AUD' ? 'A' : ''}$${cost.toFixed(0)}</span>
+            <button class="pf-remove" onclick="removeHolding(${i})" title="Remove">✕</button>
+        `;
+        div.style.cursor = 'pointer';
+        div.onclick = (e) => {
+            if (e.target.classList.contains('pf-remove')) return;
+            const tv = guessExchange(h.sym) + ':' + h.sym;
+            switchChartSym(tv, h.sym);
+        };
+        container.appendChild(div);
+    });
+
+    summary.style.display = '';
+    document.getElementById('pf-invested').textContent = '$' + totalInvested.toFixed(0);
+    document.getElementById('pf-count').textContent = portfolio.length;
+    document.getElementById('pf-total-tag').textContent = '$' + totalInvested.toFixed(0);
+}
+
+// ─────────────────────────────────────────────────────────
+// RISK / POSITION SIZE CALCULATOR
+// ─────────────────────────────────────────────────────────
+function calculateRisk() {
+    const account = parseFloat(document.getElementById('risk-account').value) || 0;
+    const riskPct = parseFloat(document.getElementById('risk-pct').value) || 2;
+    const entry = parseFloat(document.getElementById('risk-entry').value) || 0;
+    const stop = parseFloat(document.getElementById('risk-stop').value) || 0;
+
+    if (!entry || !stop || entry <= stop) {
+        document.getElementById('risk-result').innerHTML = '<div style="font-size:10px;color:var(--red);margin-top:6px">Enter valid entry & stop prices (entry must be above stop).</div>';
+        return;
+    }
+
+    const riskPerShare = entry - stop;
+    const maxRiskDollars = account * (riskPct / 100);
+    const shares = Math.floor(maxRiskDollars / riskPerShare);
+    const positionSize = shares * entry;
+    const pctOfAccount = ((positionSize / account) * 100).toFixed(1);
+    const potentialLoss = shares * riskPerShare;
+
+    document.getElementById('risk-result').innerHTML = `
+        <div class="risk-result-grid">
+            <div class="risk-stat">
+                <div class="risk-stat-val c-blue">${shares}</div>
+                <div class="risk-stat-label">Shares to Buy</div>
+            </div>
+            <div class="risk-stat">
+                <div class="risk-stat-val c-green">$${positionSize.toLocaleString()}</div>
+                <div class="risk-stat-label">Position Size</div>
+            </div>
+            <div class="risk-stat">
+                <div class="risk-stat-val c-red">$${potentialLoss.toFixed(0)}</div>
+                <div class="risk-stat-label">Max Loss</div>
+            </div>
+            <div class="risk-stat">
+                <div class="risk-stat-val" style="color:${parseFloat(pctOfAccount) > 15 ? 'var(--red)' : 'var(--gold)'}">${pctOfAccount}%</div>
+                <div class="risk-stat-label">of Account</div>
+            </div>
+        </div>
+        ${parseFloat(pctOfAccount) > 15 ? '<div style="font-size:9px;color:var(--red);margin-top:6px">⚠ Position exceeds 15% rule — consider reducing size.</div>' : ''}
+    `;
+}
+
+// Auto-populate risk calculator when clicking watchlist stocks
+function populateRiskFromWatchlist(s) {
+    const entryMatch = s.entry.match(/[\d.]+/);
+    const stopMatch = s.stop.match(/[\d.]+/);
+    if (entryMatch) document.getElementById('risk-entry').value = entryMatch[0];
+    if (stopMatch) document.getElementById('risk-stop').value = stopMatch[0];
+}
+
+// ─────────────────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -2875,6 +3278,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Build new picks on load
     buildNewPicks();
+
+    // Build top action card
+    buildTopAction();
+
+    // Restore chart mode toggle state
+    const modeToggle = document.querySelectorAll('.chart-mode-toggle .btn');
+    modeToggle.forEach(b => b.classList.remove('active'));
+    if (chartMode === 'pro') modeToggle[1]?.classList.add('active');
+    else modeToggle[0]?.classList.add('active');
+
+    // Render portfolio
+    renderPortfolio();
 
     // Snapshot today's recommendations for history tracking
     snapshotRecommendations();
