@@ -377,6 +377,12 @@
             margin-bottom: 7px;
             position: relative;
             overflow: hidden;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .trade-card:hover {
+            border-color: var(--blue);
+            background: rgba(88,166,255,0.05);
         }
         .trade-card::before {
             content: ''; position: absolute;
@@ -437,7 +443,10 @@
         .earn-row {
             display: flex; align-items: center; justify-content: space-between;
             padding: 7px 0; border-bottom: 1px solid var(--border-light);
+            cursor: pointer; border-radius: 4px; padding: 7px 6px;
+            transition: background 0.1s;
         }
+        .earn-row:hover { background: var(--blue-dim); }
         .earn-row:last-child { border-bottom: none; }
         .earn-date { font-family: var(--font-mono); font-size: 10px; color: var(--text-2); width: 52px; }
         .earn-sym  { font-weight: 600; font-size: 13px; }
@@ -1050,7 +1059,7 @@
             </div>
 
             <!-- TSM ─ ACTIVE -->
-            <div class="trade-card tc-active">
+            <div class="trade-card tc-active" onclick="switchChartSym('NYSE:TSM','TSM')">
                 <div class="tc-head">
                     <span class="tc-sym">TSM</span>
                     <span class="tc-badge badge-active">ACTIVE</span>
@@ -1079,7 +1088,7 @@
             </div>
 
             <!-- MSFT ─ WAIT -->
-            <div class="trade-card tc-wait">
+            <div class="trade-card tc-wait" onclick="switchChartSym('NASDAQ:MSFT','MSFT')">
                 <div class="tc-head">
                     <span class="tc-sym">MSFT</span>
                     <span class="tc-badge badge-wait">WAIT</span>
@@ -1108,7 +1117,7 @@
             </div>
 
             <!-- NVDA ─ NOT YET -->
-            <div class="trade-card tc-no">
+            <div class="trade-card tc-no" onclick="switchChartSym('NASDAQ:NVDA','NVDA')">
                 <div class="tc-head">
                     <span class="tc-sym">NVDA</span>
                     <span class="tc-badge badge-no">NOT YET</span>
@@ -1137,7 +1146,7 @@
             </div>
 
             <!-- IVV ─ CONSIDER -->
-            <div class="trade-card tc-wait">
+            <div class="trade-card tc-wait" onclick="switchChartSym('AMEX:IVV','IVV')">
                 <div class="tc-head">
                     <span class="tc-sym">IVV <span style="font-size:10px;color:var(--text-3)">ASX</span></span>
                     <span class="tc-badge badge-watch">CONSIDER</span>
@@ -1165,7 +1174,7 @@
                 <div class="tc-note">~7% upside · April earnings season catalyst · Quarter-end institutional buying · Monitor Iran risk</div>
             </div>
 
-            <div style="font-size:9px;color:var(--text-3);margin-top:2px;padding:6px;background:var(--bg-3);border-radius:5px">
+            <div style="font-size:9px;color:var(--text-3);margin-top:2px;padding:6px;background:var(--bg-3);border-radius:5px;cursor:pointer" onclick="switchChartSym('NYSE:ORCL','ORCL')">
                 ⚠ NOT ENTERING: ORCL — wait for confirmed floor above $118 52-week low
             </div>
         </div>
@@ -1186,43 +1195,43 @@
                 <span style="font-size:9px;color:var(--text-3)">Sell day BEFORE</span>
             </div>
             <div class="card">
-                <div class="earn-row">
+                <div class="earn-row" onclick="switchChartSym('NYSE:TSM','TSM')">
                     <span class="earn-date">Apr 16</span>
                     <span class="earn-sym">TSM</span>
                     <span class="earn-days ed-hot" id="ed-tsm">—</span>
                     <span class="tag tag-red">ACTIVE</span>
                 </div>
-                <div class="earn-row">
+                <div class="earn-row" onclick="switchChartSym('NASDAQ:AMZN','AMZN')">
                     <span class="earn-date">Apr 23</span>
                     <span class="earn-sym">AMZN</span>
                     <span class="earn-days ed-soon" id="ed-amzn">—</span>
                     <span class="tag tag-gold">SOON</span>
                 </div>
-                <div class="earn-row">
+                <div class="earn-row" onclick="switchChartSym('NASDAQ:MSFT','MSFT')">
                     <span class="earn-date">Apr 28</span>
                     <span class="earn-sym">MSFT</span>
                     <span class="earn-days ed-soon" id="ed-msft">—</span>
                     <span class="tag tag-gold">SOON</span>
                 </div>
-                <div class="earn-row">
+                <div class="earn-row" onclick="switchChartSym('NASDAQ:NXPI','NXPI')">
                     <span class="earn-date">Apr 28</span>
                     <span class="earn-sym">NXPI</span>
                     <span class="earn-days ed-soon" id="ed-nxpi">—</span>
                     <span class="tag tag-blue">WATCH</span>
                 </div>
-                <div class="earn-row">
+                <div class="earn-row" onclick="switchChartSym('NASDAQ:NVDA','NVDA')">
                     <span class="earn-date">May 20</span>
                     <span class="earn-sym">NVDA</span>
                     <span class="earn-days ed-far" id="ed-nvda">—</span>
                     <span class="tag tag-blue">WATCH</span>
                 </div>
-                <div class="earn-row">
+                <div class="earn-row" onclick="switchChartSym('NASDAQ:CRWD','CRWD')">
                     <span class="earn-date">Jun 2</span>
                     <span class="earn-sym">CRWD</span>
                     <span class="earn-days ed-far" id="ed-crwd">—</span>
                     <span class="tag tag-blue">WATCH</span>
                 </div>
-                <div class="earn-row">
+                <div class="earn-row" onclick="switchChartSym('NYSE:ORCL','ORCL')">
                     <span class="earn-date">Jun 16</span>
                     <span class="earn-sym">ORCL</span>
                     <span class="earn-days ed-far" id="ed-orcl">—</span>
